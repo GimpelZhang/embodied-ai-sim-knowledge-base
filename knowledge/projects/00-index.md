@@ -8,20 +8,23 @@
 
 ## 总表
 
-| 项目 slug | 名称 / 上游 | 开发方 | 状态 | background 文档（原理层） | ai_knowledge 文档（经验层） | troubleshooting（排障层） | 项目内索引 |
-|---|---|---|---|---|---|---|---|
-| `genie_sim_v3` | Genie Sim 3.x (`AgibotTech/genie_sim`) | 智元机器人 AgiBot | ✅ 已完成 | [`genie_sim_v3/background_knowledge.md`](genie_sim_v3/background_knowledge.md) | [`genie_sim_v3/ai_knowledge.md`](genie_sim_v3/ai_knowledge.md) | [`genie_sim_v3/troubleshooting.md`](genie_sim_v3/troubleshooting.md) | [`genie_sim_v3/00-index.md`](genie_sim_v3/00-index.md) |
-| `genesis_world` | Genesis World (`Genesis-Embodied-AI/genesis-world`) | Genesis Embodied AI | ⏳ 待编写 | — | — | — | — |
-| `ge_sim_v2` | GE-Sim-V2 (`AgibotTech/GE-Sim-V2`) | 智元机器人 AgiBot | ⏳ 待编写 | — | — | — | — |
-| `lw_benchhub` | LW-BenchHub (`LightwheelAI/LW-BenchHub`) | 光轮智能 Lightwheel | ⏳ 待编写 | — | — | — | — |
+| 项目 slug | 名称 / 上游 | 开发方 | 状态 | background（原理层） | ai_knowledge（经验层） | troubleshooting（排障层） | code_knowledge（代码层） | 项目内索引 |
+|---|---|---|---|---|---|---|---|---|
+| `genie_sim_v3` | Genie Sim 3.x (`AgibotTech/genie_sim`) | 智元机器人 AgiBot | ✅ 已完成 | [`background_knowledge.md`](genie_sim_v3/background_knowledge.md) | [`ai_knowledge.md`](genie_sim_v3/ai_knowledge.md) | [`troubleshooting.md`](genie_sim_v3/troubleshooting.md) | [`code_knowledge.md`](genie_sim_v3/code_knowledge.md) | [`00-index.md`](genie_sim_v3/00-index.md) |
+| `genesis_world` | Genesis World (`Genesis-Embodied-AI/genesis-world`) | Genesis Embodied AI | ⏳ 待编写 | — | — | — | — | — |
+| `ge_sim_v2` | GE-Sim-V2 (`AgibotTech/GE-Sim-V2`) | 智元机器人 AgiBot | ⏳ 待编写 | — | — | — | — | — |
+| `lw_benchhub` | LW-BenchHub (`LightwheelAI/LW-BenchHub`) | 光轮智能 Lightwheel | ⏳ 待编写 | — | — | — | — | — |
 
-**三类文档的分工**（同一批事实的三个视图，按"手上有什么"选）：
+**四类文档的分工**（按"手上有什么"选）：
 
 | 你现在的处境 | 去哪 | 层次 |
 |---|---|---|
 | **手上有一条报错 / 异常现象** | `troubleshooting.md` 顶部「快速症状索引」 | **排障层**，Q&A，`[实践]` 级 |
+| **要跑起来 / 要改代码 / 找某个类或参数在哪个文件** | `code_knowledge.md` §2 入口点、§3 核心模块、§4 配置系统 | **代码层**，`[CODE]`/`[实践]`/`[推断]` 级 |
 | 想知道**为什么会这样、当时试错走过哪些弯路** | `ai_knowledge.md` §4（含"无效尝试"列） | **经验层**，全篇 `[实践]` 级 |
 | 查 **API / 参数 / 设计原理 / 版本能力** | `background_knowledge.md`（固定 9 章） | **原理层**，多为 `[CODE]`/`[PAPER]` 级 |
+
+> ⚠️ **代码层描述的是本机实战复现仓库 `<project>_tour`，不是上游本体**，可能落后于上游版本；跨版本迁移前先读该文的版本落差说明。
 
 ---
 
@@ -29,9 +32,11 @@
 
 - **开发方**：智元机器人（AgiBot / AgibotTech）
 - **版本**：v3.2.0（发布 2026-06-25），许可证 MPL-2.0
-- **background 文档**：[`genie_sim_v3/background_knowledge.md`](genie_sim_v3/background_knowledge.md)（1657 行，9 章齐备）
-- **ai_knowledge 文档**：[`genie_sim_v3/ai_knowledge.md`](genie_sim_v3/ai_knowledge.md)（372 行，复现实战复盘，`[实践]` 级）
-- **troubleshooting 文档**：[`genie_sim_v3/troubleshooting.md`](genie_sim_v3/troubleshooting.md)（600 行，`Q01`–`Q29` FAQ，按现象检索，`[实践]` 级）
+- **background 文档**：[`genie_sim_v3/background_knowledge.md`](genie_sim_v3/background_knowledge.md)（1694 行，9 章齐备）
+- **ai_knowledge 文档**：[`genie_sim_v3/ai_knowledge.md`](genie_sim_v3/ai_knowledge.md)（393 行，复现实战复盘，`[实践]` 级）
+- **troubleshooting 文档**：[`genie_sim_v3/troubleshooting.md`](genie_sim_v3/troubleshooting.md)（605 行，`Q01`–`Q29` FAQ，按现象检索，`[实践]` 级）
+- **code_knowledge 文档**：[`genie_sim_v3/code_knowledge.md`](genie_sim_v3/code_knowledge.md)（1251 行，8 章，对应复现仓库 `genie_sim_v3_tour`，`[CODE]`/`[实践]`/`[推断]` 级）
+- ⭐ **quickstart 速查卡**：[`genie_sim_v3/quickstart.md`](genie_sim_v3/quickstart.md)（385 行，环境准备 / 3 个运行示例 / 改参数 / 9 个常见代码问题 / 一分钟自检清单）——**要动手先读这个**
 - **项目内索引**：[`genie_sim_v3/00-index.md`](genie_sim_v3/00-index.md) ← **先读这个拿行号**
 
 **简短总结**
@@ -43,10 +48,13 @@
 **复现经验摘要**（详见 `ai_knowledge.md`）
 一次五阶段实战（环境搭建 → LLM 场景生成 → 3DGS 重建 → USD 物理注入 → 资产规范化）的三条最高价值结论：① **Isaac Sim 5.1 要求硬件 RT cores（Compute Capability ≥ 7.5）**，V100 的 7.0 会导致渲染器静默失败、benchmark 永久挂起，软件光追不被接受；② **CUDA 架构错配会伪装成显存问题**（极小张量报 OOM、请求 56 GiB），换卡后必须重编译所有 CUDA 扩展；③ **"日志在刷 ≠ 任务在跑"**，需用 GPU 利用率、端口 ESTABLISHED、日志明确标记等独立判据。另有 18 条带"无效尝试"记录的问题条目可直接用于排障；已改写为 [`troubleshooting.md`](genie_sim_v3/troubleshooting.md) 的 29 条 Q&A，**带报错就直接查那里的「快速症状索引」**。
 
+**代码层摘要**（详见 `code_knowledge.md`）
+描述对象是复现仓库 `genie_sim_v3_tour`（91 个已跟踪文件 / 约 15.7K 行 / 仅 4 个提交）。三个最关键特征：① **它是叠在上游之上的覆盖层，不能独立跑通** —— 无任何 `requirements.txt`/`setup.py`，`entrypoint.sh`、`patch/*.patch`、生成器主体、`assets/`、`openpi/` 全部缺失。② **工作量在"新写"而非"改上游"** —— 经逐文件复核站得住的上游改动仅三类（`enable_cameras` 涉 2 文件、`api_core.py:429` `timeout=600`、重建 `Dockerfile:8` `TORCH_CUDA_ARCH_LIST` `8.9→8.0`），而新写约 1800 行 Python：Real2Sim USD 编写工具箱（三层 prim 树 + 材质图接线）、绕开 WebUI 的 CLI 场景生成、G1–G4 数值门禁。③ **陷阱集中在硬编码与平台假设** —— 容器路径 `/geniesim/main`、`TORCH_CUDA_ARCH_LIST`（本仓库 `8.0`／上游 `8.9`，换卡必重编）、带哈希的 extscache 路径、`:latest` 镜像 tag、Real2Sim 对齐常数只存在于源码。该文 §8.3 还为 `Q15`/`Q16`/`Q22`/`Q17` 等排障条目补上了 `[CODE]` 级机制解释，§6.4 指出 v3.2.0 已上游修掉整条"相机全黑"故障链，但 `timeout=600` 是唯一一条**必须带到新版本**的改动。⚠️ §7.3 记录两类明文凭据曾进入公开仓库（LLM API key 3 文件 + 宿主机 sudo 口令 2 文件共 36 处），已于 2026-08-29 吊销/改密，明文串清理待做。
+
 **本机相关资源**（均已 gitignore，仅本地有效）
 - 源料清单：`sources/genie_sim_v3/background.txt`（上游仓库 + arXiv:2601.02078 + 官方文档站）
 - 上游仓库克隆：`sources/genie_sim_v3/genie_sim/`
-- 实战复现仓库：`genie_sim_v3_tour/`（Stage 1 容器化闭环 / Stage 2 LLM 场景生成 / Stage 3 3DGS 实采重建导入）
+- 实战复现仓库：`genie_sim_v3_tour/`（Stage 1 容器化闭环 / Stage 2 LLM 场景生成 / Stage 3 3DGS 实采重建导入）—— **代码结构已提炼进 `code_knowledge.md`，查代码优先读文档**
 
 ---
 

@@ -18,10 +18,12 @@ knowledge/projects/00-index.md   ← 项目花名册 + 标签 + 选型对照表
         ↓
 knowledge/projects/<项目>/00-index.md   ← 章节地图，定位到具体小节
         ↓
+        ├── quickstart.md             ← 【速查层】⭐ 要动手就先读这个：最短路径 + 自检清单
         ├── background_knowledge.md   ← 【原理层】是什么、怎么设计、API 与限制
         ├── ai_knowledge.md           ← 【经验层】实战踩坑、决策复盘、可复用教训
-        └── troubleshooting.md        ← 【排障层】按报错现象查的 Q&A（最快路径）
-              三者都只读需要的那几十行
+        ├── troubleshooting.md        ← 【排障层】按报错现象查的 Q&A（带报错时最快路径）
+        └── code_knowledge.md         ← 【代码层】代码在哪、怎么启动、改哪个文件、硬编码陷阱
+              后四者都只读需要的那几十行；quickstart 可整篇读（385 行）
 ```
 
 **先选对文档层次**（这一步选错会浪费很多时间）：
@@ -29,18 +31,20 @@ knowledge/projects/<项目>/00-index.md   ← 章节地图，定位到具体小�
 | 我的问题是 | 查哪层 |
 |---|---|
 | **我手上有一条具体报错 / 日志异常，现在怎么办？** | **排障层** `troubleshooting.md` —— 直接看顶部「快速症状索引」，按现象查到 `Qxx`。**带报错时这是最快路径，优先于经验层。** |
+| **我要动代码 / 要跑起来 / 找某个类或参数在哪个文件？** | **代码层** `code_knowledge.md` —— §2 入口点与完整命令、§3 核心模块、§4 配置系统、§7 硬编码陷阱 |
 | 这个报错**为什么**会这样？当时试过哪些无效方法？ | **经验层** `ai_knowledge.md` §4（问题表含"无效尝试"列，可直接排除错误路径） |
 | 这个仿真器怎么设计的？有什么 API / 配置项 / 能力边界？ | **原理层** `background_knowledge.md` |
 | 复现这东西大概要多久、会踩几个坑、哪些决策容易做错？ | **经验层** §2 时间线 + §3 决策表 + §6 教训 |
 
 > 排障层与经验层是**同一批事实的两个视图**（`Qxx` ↔ `Pxx` 一一对应），不是互相补充 —— 不必两边都读。
+> **代码层是独立视角**：它描述**具体某个复现仓库的代码实体**（不是上游本体），并为排障层的现象提供 `[CODE]` 级机制解释。四层的关联映射见各项目 `code_knowledge.md` §8。
 
 **硬性规则：**
 
 | 规则 | 说明 |
 |---|---|
 | 按需读取 | `background_knowledge.md` 单文件可达 1600+ 行。**永远先读该项目的 `00-index.md` 拿到行号，再用 `Read` 的 `offset`/`limit` 精准读取**，不要整篇载入。 |
-| 认证据等级 | 正文每条结论带 `[CODE]` / `[PAPER]` / `[README]` / `[实践]` 标注。**做工程决策只信 `[CODE]`**；`[PAPER]` 是宣称值，`[实践]` 是本地踩坑记录，不等于官方结论。 |
+| 认证据等级 | 正文每条结论带 `[CODE]` / `[PAPER]` / `[README]` / `[实践]` / `[推断]` 标注。**做工程决策只信 `[CODE]`**；`[PAPER]` 是宣称值，`[实践]` 是本地踩坑记录，不等于官方结论；`[推断]` 表示证据不足以定论（仅代码层使用）。 |
 | 不补空白 | 标注 `未提及` 的地方表示三方资料均无证据。**不要据此推测**，需要就去读上游仓库源码，读到后回写本库。 |
 | 无密钥无绝对路径 | 本库所有文档禁止出现账号、密码、密钥、access token；示例中的本地路径统一写作 `<your_path>`、主机地址写作 `<INFER_IP>:<PORT>`。**新增内容时沿用此约定。** |
 | 行号会漂 | 索引里的行号是编写时快照。若 `Read` 到的内容与索引描述不符，用 `grep -n '^## '` 重新定位并**顺手更新索引**。 |
@@ -57,10 +61,11 @@ simulation-knowledge/
 │   └── projects/
 │       ├── 00-index.md              ← 项目花名册
 │       └── <project_slug>/
-│           ├── 00-index.md          ← 项目内章节地图（三篇文档都在这里定位行号）
+│           ├── 00-index.md          ← 项目内章节地图（四篇文档都在这里定位行号）
 │           ├── background_knowledge.md   ← 原理层主文档（固定 9 章结构）
 │           ├── ai_knowledge.md           ← 经验层文档（复现实战复盘，可选）
-│           └── troubleshooting.md        ← 排障层文档（由经验层 §4 改写为 Q&A，可选）
+│           ├── troubleshooting.md        ← 排障层文档（由经验层 §4 改写为 Q&A，可选）
+│           └── code_knowledge.md         ← 代码层文档（对应 <project>_tour 复现仓库，可选）
 ├── sources/                         ← ⚠️ 已 gitignore，仅本地存在
 │   └── <project_slug>/
 │       ├── background.txt           ← 该项目的源料 URL 清单
@@ -81,12 +86,12 @@ simulation-knowledge/
 
 详表见 [`projects/00-index.md`](projects/00-index.md)。
 
-| 项目 | 定位一句话 | 原理层文档 | 经验层文档 | 排障层文档 |
-|---|---|---|---|---|
-| **genie_sim_v3** | 智元 Genie Sim 3.x，OpenUSD + Isaac Sim 的评测/采集/RL 三栈仿真平台 | ✅ [已完成](projects/genie_sim_v3/background_knowledge.md) | ✅ [已完成](projects/genie_sim_v3/ai_knowledge.md) | ✅ [Q01–Q29](projects/genie_sim_v3/troubleshooting.md) |
-| **genesis_world** | Genesis World 物理平台，单卡大规模并行 + 刚柔流多物理场 | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 |
-| **ge_sim_v2** | 智元 GE-Sim-V2，视频扩散**生成式世界模型**（非传统物理仿真） | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 |
-| **lw_benchhub** | 光轮 LW-BenchHub，IsaacLab-Arena + lerobot 生态的统一物理底座 | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 |
+| 项目 | 定位一句话 | 速查层 | 原理层文档 | 经验层文档 | 排障层文档 | 代码层文档 |
+|---|---|---|---|---|---|---|
+| **genie_sim_v3** | 智元 Genie Sim 3.x，OpenUSD + Isaac Sim 的评测/采集/RL 三栈仿真平台 | ⭐ [速查卡](projects/genie_sim_v3/quickstart.md) | ✅ [已完成](projects/genie_sim_v3/background_knowledge.md) | ✅ [已完成](projects/genie_sim_v3/ai_knowledge.md) | ✅ [Q01–Q29](projects/genie_sim_v3/troubleshooting.md) | ✅ [已完成](projects/genie_sim_v3/code_knowledge.md) |
+| **genesis_world** | Genesis World 物理平台，单卡大规模并行 + 刚柔流多物理场 | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 |
+| **ge_sim_v2** | 智元 GE-Sim-V2，视频扩散**生成式世界模型**（非传统物理仿真） | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 |
+| **lw_benchhub** | 光轮 LW-BenchHub，IsaacLab-Arena + lerobot 生态的统一物理底座 | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 |
 
 ---
 
@@ -95,6 +100,9 @@ simulation-knowledge/
 | 我要做的事 | 建议路径 |
 |---|---|
 | **手上有一条报错，先判断是不是已知坑** | ⭐ **`troubleshooting.md` 顶部「快速症状索引」** —— 按现象直接查到 `Qxx`（genie_sim_v3 有 29 条） |
+| **把某个已复现的工具链跑起来（完整命令）** | ⭐⭐ **先看 `quickstart.md`**（若该项目有）—— 最短路径 + 自检清单；不够细再进 **`code_knowledge.md` §2「入口点与运行方式」**（容器启动、逐条 `docker exec`、环境变量总表） |
+| **改代码 / 加新任务 / 改配置项** | ⭐ **`code_knowledge.md` §3 核心模块 + §4 配置系统**（含"注册新任务必改的 6 处"） |
+| **换机器或换显卡前的兼容性检查** | **`code_knowledge.md` §7.5 平台假设 + §5.5 版本约束** —— 编译期写死的 GPU 架构是最常见的坑 |
 | 装某个仿真器 / 排装机报错 | `troubleshooting.md` §一~§三 → 详因见 `ai_knowledge.md` §4（含无效尝试）→ 再看 `background_knowledge.md` 第 5 章（安装与依赖）+ 第 8 章（已知问题） |
 | **进程像在跑但没有产出** | `troubleshooting.md` §五「看起来在跑类假象」→ 教训 `L2`（独立存活判据） |
 | **CUDA 报错 / 显存数字不合理** | `troubleshooting.md` §四（`Q12`–`Q13`）→ `ai_knowledge.md` `P08` + `L1` —— 优先怀疑 compute capability 架构不匹配，而非显存容量 |
@@ -112,6 +120,6 @@ simulation-knowledge/
 
 ## 知识库现状
 
-- **已完成**：1 个项目（genie_sim_v3）—— 原理层 1657 行（9 章齐备，含传感器仿真深挖）＋ 经验层 372 行（五阶段复现复盘，18 个问题条目 / 10 个决策 / 8 条教训）＋ 排障层 600 行（`Q01`–`Q29` FAQ，按现象检索）
+- **已完成**：1 个项目（genie_sim_v3）—— 原理层 1694 行（9 章齐备，含传感器仿真深挖）＋ 经验层 393 行（五阶段复现复盘，18 个问题条目 / 10 个决策 / 8 条教训）＋ 排障层 605 行（`Q01`–`Q29` FAQ，按现象检索）＋ **代码层 1251 行**（对应复现仓库 `genie_sim_v3_tour`，8 章：结构 / 入口 / 核心模块 / 配置 / 依赖 / 修改点 / 注意事项 / 四层关联）＋ **速查层 385 行**（`quickstart.md`：环境准备 / 运行示例 / 改参数 / 常见代码问题 / 自检清单）
 - **源料就绪、待编写**：3 个项目（genesis_world / ge_sim_v2 / lw_benchhub），`sources/<slug>/` 下已有 URL 清单与原始资料，且本机均有对应的实战仓库可交叉验证
-- **下一步建议**：按同一 9 章模板补齐剩余 3 个项目的原理层；三个项目均有本机实战仓库，可同时产出经验层 `ai_knowledge.md`，再由其 §4 派生排障层 `troubleshooting.md`。每篇完成后同步更新本文件、`projects/00-index.md` 与该项目 `00-index.md` 三处
+- **下一步建议**：按同一 9 章模板补齐剩余 3 个项目的原理层；三个项目均有本机实战仓库，可同时产出经验层 `ai_knowledge.md`，再由其 §4 派生排障层 `troubleshooting.md`，并按 genie_sim_v3 的 8 章模板产出代码层 `code_knowledge.md`。每篇完成后同步更新本文件、`projects/00-index.md` 与该项目 `00-index.md` 三处
