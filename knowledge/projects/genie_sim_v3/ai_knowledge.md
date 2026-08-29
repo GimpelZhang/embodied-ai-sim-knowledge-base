@@ -1,6 +1,6 @@
 # genie_sim_v3 · 复现经验知识（AI Agent 实战复盘）
 
-> **本文定位** — 这是一份**经验层**文档，与同目录的 [`background_knowledge.md`](background_knowledge.md)（工具链**原理层**）互补。前者回答"这东西是什么、怎么设计的"，本文回答"真上手会撞到什么、为什么改主意、下次怎么少走弯路"。
+> **本文定位** — 这是一份**经验层**文档，与同目录的 [`background_knowledge.md`](background_knowledge.md)（工具链**原理层**）互补。前者回答"这东西是什么、怎么设计的"，本文回答"真上手会撞到什么、为什么改主意、下次怎么少走弯路"。**本次复现产出的代码实体**已单独整理为 [`code_knowledge.md`](code_knowledge.md)（**代码层**，8 章）：本文的教训 `L1`–`L8` 在该文 §8.2 有逐条代码物证，本文 §7.2 提到的"3 张查找表 + 6 个配置文件"在该文 §4.5 有精确路径与行号。
 >
 > **证据等级** — 全文除明确标注外，**均为 `[实践]` 级**：来自一次真实复现的本机记录，**不是官方结论**，可能受当时 release 版本、硬件与代理环境影响。凡涉及工程决策，请回上游仓库以 `[CODE]` 级复核。
 >
@@ -10,6 +10,8 @@
 >
 > **编号稳定** — 问题编号 `P01`–`P18`、经验编号 `L1`–`L8` 为永久编号，后续修订只追加、不重排。事件编号 `E01`–`E32` 引用 [`key_events_summary.md`](../../../sources/genie_sim_v3/key_events_summary.md)（**仅本机存在**，`sources/` 已 gitignore）。
 
+> **📌 先分诊，别从本文开始读** — 本文按**复盘叙事**组织（先背景、再时间线、再决策、再问题），适合"想知道为什么会这样、试过哪些无效方法、下次怎么少走弯路"。如果你**手上已经有一条具体报错**，走同目录 [`troubleshooting.md`](troubleshooting.md) 顶部的「快速症状索引」更快 —— 它是本文 §4 按**故障类别**重排的 Q&A（`Q01`–`Q29` ↔ 本文 `P01`–`P18` 一一对应），**不必两边都读**。如果你只是**还没装完/想不起命令**，走 [`quickstart.md`](quickstart.md)。
+>
 ---
 
 ## 1. 复现目标与背景
@@ -158,6 +160,8 @@
 | **P05** ★ | `PermissionError`（`shutil.copy` 内部 `os.chmod`）／host 侧写文件 EACCES／`mv` 隐藏旧场景被拒 —— **同一根因踩 3 次** | 容器以 **UID 1234** 运行，与宿主用户 UID 不同；两侧交替写同一批文件必然冲突 | 逐个文件 `chmod`（治不了新生成的文件） | 开工第一步就把相关目录整体 `chown` 到容器 UID。**原则：跨边界文件操作，要么全程在容器内做，要么全程在宿主机做，不要交替** |
 | **P06** | 宿主机重启后，之前修好的渲染问题（P03）全部复发 | GL 库被放在 tmpfs 临时目录下，重启即丢 | 只重新 cp 库文件 —— 仍然失败 | 重填库文件后**必须重建容器**（旧容器挂载的是空目录快照）；长期解法是把库永久迁出 tmpfs |
 
+> → **代码级定位**（`code_knowledge.md`）：`P02` 的代理三层 → §5.4 与 §6.2(e)；`P04`/`P05` 的 UID 1234 与 `entrypoint.sh` `set -e` → **§2.3**（`start_headless.sh:7-15,19-20` 逐 flag 说明，⚠️ 该脚本**不在覆盖层内**）；`P06` 的 tmpfs → **§2.3** 的 `-v /tmp/nvidia-libs:/usr/local/nvidia/glx:ro`（`:35`）与 §7.5 平台假设。上手命令见 [`quickstart.md`](quickstart.md) §1.4。
+
 ### 4.2 GPU 与 CUDA（P07–P10）—— 本次复现的头号杀手
 
 | # | 现象 | 排查过程 | 无效尝试 | 最终解决 |
@@ -167,6 +171,8 @@
 | **P09** ★ | `UnicodeDecodeError` → `SceneManager` 不存在 → `OverflowError`（`np.uint64(-1)`）—— 版本连锁 | 自写二进制解析器读 COLMAP `images.bin` 失败 → 改用 pycolmap 官方 API → `SceneManager` 在 4.x 已移除，只能装 legacy → legacy 与 numpy 2.x 冲突 | 试图在同一 env 中同时满足 gsplat 与 PGSR 的 pycolmap 需求（**正面互斥，不可能成功**） | legacy pycolmap + 锁 `numpy<2`、`plyfile<1.1`、`opencv-python-headless<4.10`；PGSR 需官方 `pycolmap==3.11.1`，故**彻底隔离两个 conda env**（见 D5） |
 | **P10** | `Ninja is required`（但 ninja 明明装了）／`fused-ssim` PyPI 无包／`ValueError` 找不到降采样图像目录 | ① torch 的 ninja 检查走 `shutil.which`，而 `conda activate` 不把 env 的 bin 传给子进程 PATH；② PEP 517 构建隔离看不到已装的 torch；③ gsplat 的 `--data_factor 2` **不是运行时降采样**，而是直接去读 `images_2/` 目录 | — | ① 显式把 conda env bin 与 `$CUDA_HOME/bin` 前置进 PATH；② 从 git 指定 commit 安装并加 **`--no-build-isolation`**（此后成为所有 torch 依赖型 CUDA 扩展的标配）；③ 事先用 `cv2.resize(INTER_AREA)` 为全部倍率预生成目录；④ headless 还须显式 `--disable_viewer` |
 
+> → **代码级定位**（`code_knowledge.md`）：`P08` 的 `TORCH_CUDA_ARCH_LIST` → **§5.3 与 §7.5**。⚠️ **注意本条的一处版本差异**：`P08` 记录"Dockerfile 原写 `8.9`/RTX 4090，计划阶段误判改成 `8.0`"——代码层已 `[CODE]` 核实**当前仓库里就是 `8.0`，而上游原值仍是 `8.9`**（`source/scene_reconstruction/Dockerfile:8`，全文件 diff 只差这一行，见 §6.2(c)）。即**这一改动被保留下来了**，重新 clone 上游会拿回 `8.9`，换卡时两个方向都要查。`P09`/`P10` 的多环境隔离 → §5.3（`pycolmap` 冲突是**写进 Dockerfile 的设计**）与 §2.2 四解释器表。
+
 ### 4.3 "看起来在跑"类假象（P11–P13）—— 最贵的一类
 
 | # | 现象 | 排查过程 | 无效尝试 | 最终解决 |
@@ -174,6 +180,14 @@
 | **P11** ★ | 录制开关全开却无任何文件落盘，且**无报错** | 先确认录制走 ROS2 bag 而非 `.mp4`（需 `app.enable_ros: true`）；两个开关都开仍无输出 → 读上游源码，发现 `api_core.py` 中 `self.record_rosbag()` **默认被注释掉了** | 反复检查配置项拼写与开关组合 | 打补丁取消该行注释。**教训：配置项齐全但功能静默失效时，去读源码确认调用点是否真的被执行** |
 | **P12** ★★ | Isaac 主线程以 ~18 Hz 持续刷 `[Physics Callback]` 日志、进程 99% CPU，**看起来完全正常**，但策略服务器永远收不到第一次推理请求 | 开 ROS 后渲染循环多担 20–25% 负载，导致初始化物理的调用在默认 **120 s** 超时内跑不完，worker 线程被 `TimeoutError` 静默打死 —— 而主线程还活着继续打日志 | 检查 ROS 配置、检查策略服务器连通性（都正常，浪费时间） | 把该调用点超时显式提到 **600 s**。**诊断判据：GPU 利用率仅 1–2% 且显存占用为 0 时，立刻怀疑渲染/初始化早已失败** |
 | **P13** ★ | 容器状态 `Up` 但端口不监听；重启后报 `address already in use` | openpi 的 `compose.yml` **没定义 `command`**，`up -d` 只是把容器停在空闲 shell；另有上次会话残留进程 hold 住端口，而最小镜像里 `ss`/`nc` **都不可用**无法探测 | 只看 `docker ps` 状态为 Up 就认为服务就绪；用 `ss`/`nc` 探测端口 | 手动 `docker exec -d` 起 server（env 参数须**大写**）；起前无脑 `pkill` 残留。**唯一可靠验证是 tail 日志看到 `server listening on 0.0.0.0:9001`，不能只看进程存在** |
+
+> → **代码级定位**（`code_knowledge.md`）——本节三条都已升级为 `[CODE]` 级机制解释：
+>
+> - **`P12`（最有价值的一条）** → **§6.2(b)**：修法精确到 `api_core.py:428–429`，给 `_collect_init_physics` 传 `timeout=600`。机制见 **§3.1**：`run_on_render_loop`/`run_on_physics_loop` 用 `threading.Event().wait(timeout=120)` 后抛 `TimeoutError`，**而渲染循环本身不停 tick**，所以"日志在刷"与"任务已死"可以同时成立。★★ **上游 v3.2.0 至今仍不传 `timeout`（`:1118`），升级后这一改动依然要自己做。**
+> - **`P13`** → §2.4：`compose.yml` 无 `command` 已 `[CODE]` 确认；就绪判据同为 `server listening on 0.0.0.0:9001`。另见 §4.2：`infer_host` 默认值是 **8999** 而实际用 9001，所以命令行永远要显式覆盖。
+> - **`P11` ⚠️ 与代码层存在未解冲突，两边都读**：本条记录"`api_core.py` 中 `self.record_rosbag()` 默认被注释掉了，打补丁取消注释"。但代码层逐字符核对后**无法证实**：`record_rosbag()` 的调用在**本覆盖层与上游 v3.2.0 两边都是未注释状态**，且函数体字节一致，覆盖层内也**找不到任何被注释掉的调用行**——即"曾经被注释过"这件事在现存代码里没有物证（详见 **§6.2(d)**，该结论已从"已确认改动"**撤回**为 `[推断]`）。
+>   **实际可确认的差异只是调用顺序**：覆盖层在 `if not self.enable_physics:` 块**之前**调用它，上游在**之后**，且上游多一句 `self.recording_started = True`（§6.3）。
+>   → **仍然成立的部分**：`record_rosbag()` 内部 `stdout/stderr/stdin` **全部 `DEVNULL`**，录制进程报什么错都看不见（§3.1）——这是"配置齐全但静默失效"的真实放大器，而且**是上游行为、v3.2.0 未修**。本条的教训（"读源码确认调用点是否真被执行"）不受影响。
 
 ### 4.4 LLM 驱动场景生成（P14–P15）
 
@@ -191,6 +205,13 @@
 | **P18** | G1–G4 验证门全部 PASS，但 `textures/` 目录是空的；表面"有 Material"却仍渲染成纯色；UV 烘焙脚本跑 1 小时无输出 | ① USD 写进了容器中转目录却忘了 copy 到最终位置 —— **验证门只查 USD 结构，没查引用的文件是否真实存在**；② 材质图连线写反/漏接，缺 `UsdPreviewSurface.diffuseColor ← UsdUVTexture.rgb` 或 `UsdUVTexture.st ← UsdPrimvarReader_float2.result`，mesh 侧还必须有 `st` primvar；③ 用 `for tri in faces` 纯 Python 循环在 4K×165K 面上做光栅化 | 烘焙加速试过 numba、`griddata`、skimage、逐三角 GPU 调用、nvdiffrast —— **五种全部失败**；`xatlas.parametrize` 在 10 万面以上 chart packing 不收敛、CPU 100% 无输出 | ① 验证门改为**从 USD 出发解析相对路径，确认文件真实存在且 size > 100 KB**；② 补齐材质图连线；③ 正解是**先激进抽面**（`fast_simplification`，`target_reduction=0.95`）再用 `scipy.spatial.cKDTree` 传色、最后纯 numpy 逐三角 bbox 向量化 → **5–20 秒完成**（Open3D 抽面到 165K 已是极限） |
 
 **另有一处"以为做了其实没做"**：静态背景**从未跑过 PGSR 训练** —— 误把另一个训练器（gsplat）的输出目录当成 PGSR 输出（不同项目，不产 mesh），直到深化实现阶段才发现。判别方法：查输出目录下有无 PGSR 的 checkpoint 与 `cameras.json`。
+
+> → **代码级定位**（`code_knowledge.md`）：
+>
+> - `P14`/`P15` 的 prompt 加固 → **§3.4**：`SYSTEM_PROMPT` 的 **CRITICAL API RULES** 与 `EXEMPLAR`/`REFERENCE_LLM_RESULT` 都能在 `stage2_generate_scenes*.py` 里逐条对上；白名单注入见 `filtered_assets()`。
+> - `P16`/`P17` 的三层 prim 结构与 SH 0 阶还原 → **§3.5**（`trackA_author_uv_usd.py` / `trackB_*`：根节点物理 API ＋ `Visuals` ＋ `purpose="guide"` 的 `CollisionProxy`，`color = clip(0.5 + 0.28209479 * f_dc, 0, 1)`）。场景级复用见 §4.4 的 `LLM_RESULT.py`（`real2sim_room()` 纯视觉、碰撞全靠两个 invisible proxy）。
+> - `P17` 的 scale/点宽反算常数 → ⚠️ **§7.2**：`ALIGN`/`SCALE`/`TRANSLATE`/`QUAT` **只存在于 Python 源码，没有任何配置文件**，且是人工量测后**手抄**进去的。想改资产位姿只能改源码（§4.6）。
+> - `P18` 的"验证门只查结构不查产物" → **§7.4**：⚠️ 代码层另外发现 `validate_gates.py` **本身也会漏报通过**——G2 失败只打印 `FAIL` 就继续跑，末行仍无条件 `print("ALL GATES PASSED")`，**退出码 0**。即本条教训（`L7`）在这个脚本上**至今没有被执行到位**，别拿它当 CI 判据。抽面加速链见 §2.6 与 §3.5。
 
 ---
 
