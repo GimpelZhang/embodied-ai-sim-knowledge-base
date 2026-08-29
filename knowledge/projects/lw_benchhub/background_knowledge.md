@@ -948,6 +948,12 @@ git-lfs 只管仓库内提交的文件（`.gitattributes` 仅 4 行：`*.onnx`�
 ## 5. 安装与依赖
 
 > 排障入口：装不上或跑不起来时，先看 [`troubleshooting.md`](troubleshooting.md)，再回来看本章的机制解释。
+>
+> 📌 **本机实测的安装踩坑集中在 [`troubleshooting.md`](troubleshooting.md) 的 A 组 `Q01`–`Q16`**（L92–352）。本章只给官方声明的依赖，**以下四条实测硬约束本章未涉及、但不满足就装不通**（`[实践]` 级，出处 `ai_knowledge.md` §1.2、§4.A）：
+> - **`numpy==1.26.0` 必须最后装，且每次 pip 操作后重新锁回**（Isaac Sim 的 C 扩展硬绑该版本）→ [`Q03`](troubleshooting.md#q03)
+> - **`warp-lang==1.8.1`** 是唯一可获得的同 minor 版本 → [`Q11`](troubleshooting.md#q11)
+> - 运行脚本必须 `set +u`（不是 `set -u`）→ [`Q14`](troubleshooting.md#q14)
+> - 必须 `unset CUDA_VISIBLE_DEVICES`，否则相机初始化 segfault 且无 traceback → [`Q15`](troubleshooting.md#q15)
 
 ### 5.1 硬件与驱动底线
 
@@ -1061,6 +1067,13 @@ lw_benchhub
 ## 6. 基本使用流程
 
 > 想直接上手敲命令，先看 [`quickstart.md`](quickstart.md)（若已生成）；本章解释流程背后的机制。
+>
+> 📌 **本章描述"该怎么跑"，但跑起来之后最容易撞上的三件事本章看不出来**（`[实践]` 级，见 [`troubleshooting.md`](troubleshooting.md) B 组 L353–508）：
+> - 成功率 **0%、机器人只轻微抽搐** → HF checkpoint 自带 `compile_model: True`，环境变量关不掉 → [`Q19`](troubleshooting.md#q19)
+> - 加载 checkpoint 时**几百个 key 不匹配只报一句 warning**，权重被静默随机初始化 → [`Q18`](troubleshooting.md#q18)
+> - **换任务或换场景后成功率一律 0%** —— 是 OOD 而非配置错 → [`Q22`](troubleshooting.md#q22)
+>
+> 本机跑通的具体命令与配置组合见 [`ai_knowledge.md`](ai_knowledge.md) §1.3（两条评测路径对照）。
 
 ### 6.1 所有脚本共用的三行范式
 
@@ -1257,6 +1270,10 @@ register_pipeline(id="LWBenchhub-Autosim-<Name>Pipeline-v0",
 > 📌 **按报错现象查解决步骤，去 [`troubleshooting.md`](troubleshooting.md)**（顶部有"快速症状索引"表）。本章是**机制层面的限制清单**，回答"能不能做到"而不是"怎么修"。
 >
 > 📌 本机复现过程中实际踩到的坑及其无效尝试记录，见 [`ai_knowledge.md`](ai_knowledge.md) §4。
+>
+> ⚠️ **本章尚未收录 6 处仅由实践发现的限制**（清单见 [`ai_knowledge.md`](ai_knowledge.md) **§7.3**，L350–362）。它们是 `[实践]` 级、未在上游仓库核实，因此**没有并入本章的 `[CODE]` 级清单**；但对"能不能做到"的判断同样重要，评估可行性时请一并读。
+>
+> ⚠️ **四条本机判定为"未解决"的限制**（`[实践]` 级）：规划器 EE 与仿真 TCP 相差 **0.30 m**（[`Q34`](troubleshooting.md#q34)）；同进程多次批量规划触发 cuRobo 内部 shape mismatch（[`Q31`](troubleshooting.md#q31)）；数据集 PNG 导出约 **40 分钟**且三条优化思路均无效（[`Q36`](troubleshooting.md#q36)）；某 layout 在 boot 阶段无限挂起（[`Q24`](troubleshooting.md#q24)）。
 
 ### 8.1 上游 issue 现状（截至 2026-08-29）
 

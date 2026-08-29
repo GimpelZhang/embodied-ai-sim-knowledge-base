@@ -49,8 +49,10 @@ knowledge/projects/<项目>/00-index.md        章节地图（带行号）+ 未�
 - **注意版本落差**。原理层描述的可能是比实践记录/代码层更新的 release（如 genie_sim_v3：原理层是 v3.2.0 的 `geniesim` CLI，经验层与代码层都是 3.0 时期的 `app/app.py`）。**经验层与代码层的命令不可直接套用到新版本**，先看 `ai_knowledge.md` §7.1 与 `code_knowledge.md` §6.4 的落差表。
 - **原理层里的修复建议可能已被实践推翻**。若两层冲突，以经验层的事后结论为准（例：`background_knowledge.md` §8.4 建议用 `primvars:displayColor` 补色，已被 `D10` 自我否定）。反之，**代码层 §6.4 可能指出某个 3.0 时期的坑已被上游修掉**——若要在新版本上部署，以代码层的上游对比结论为准。
 - **行号会漂**。若读到的内容与索引描述不符，用 `grep -n '^#\{2,3\} '` 重新定位，并顺手修正索引。
-- 已收录项目见 `knowledge/projects/00-index.md`。目前 `genie_sim_v3` 完成（**五层齐备**）；`lw_benchhub` **原理层已完成**（1442 行，含 §2.6 传感器仿真 13 小节 / §4.2 规模数字实测校准 / §8.3 十五项已验证代码缺陷 / §8.7 未找到清单），其余四层待编写；`genesis_world` / `ge_sim_v2` 源料就绪、待编写。
+- 已收录项目见 `knowledge/projects/00-index.md`。目前 `genie_sim_v3` 完成（**五层齐备**）；`lw_benchhub` **已完成原理层 / 经验层 / 排障层**（1459 + 411 + 862 行；`P01`–`P38` / `D01`–`D18` / `L01`–`L08` / `Q01`–`Q38`），**代码层与速查层待编写**；`genesis_world` / `ge_sim_v2` 源料就绪、待编写。
 - **`lw_benchhub` 的三条高频提醒**（不查文档也该知道）：① 它是**薄组合层**，行为大量由 Isaac Lab / IsaacLab-Arena 决定，**不要升级 isaaclab 或 Arena 子模块**（9 处 monkey patch 按 pin 住的版本写死）；② **README 的规模数字有 4 处与代码不符**（任务 272 非 268、机器人 28 非 27、layout 至 62 非 100、rsl-rl 只注册不执行），估工作量以 `background_knowledge.md` §4.2 为准；③ **传感器只有 RGB 且无任何噪声模型**（`enable_corruption=True` 是空转的假开关），依赖深度/激光/触觉的任务需自行扩展。
+- **`lw_benchhub` 复现层的三条硬约束**（`[实践]` 级，来自 `ai_knowledge.md`）：① **`numpy==1.26.0` 必须最后装，每次 pip 操作后重新锁回**（Isaac Sim 的 C 扩展硬绑该版本）；② 运行脚本用 `set +u`（**不是** `set -u`）且必须 `unset CUDA_VISIBLE_DEVICES`，否则相机初始化 segfault 且无 traceback；③ **Isaac Sim 必须先启动，再构造 cuRobo IK**，顺序颠倒会在 USD 纹理分配时 `cudaErrorIllegalAddress`。
+- **两条跨项目通用的排障纪律**（本次复现代价最大的两个教训，见 `lw_benchhub/ai_knowledge.md` §6）：① **动手"修复 X"之前，先量化"X 是否真的发生"** —— 本次为一个根本不存在的现象修了三轮；**若修复改变了变量而结果分毫不变，说明变量没起作用或问题不存在**，此时应质疑问题本身而非提第 N 个假设。② **任何写进配置或计划的键 / 字段 / ID，落笔前必须 grep 到它的定义处或读取处** —— 此类错误在本次复发 ≥5 次，且失败形态是**静默无效**（配置照收、日志照打，行为不变）。
 
 ---
 

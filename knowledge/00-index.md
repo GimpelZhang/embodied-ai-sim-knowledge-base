@@ -91,7 +91,7 @@ simulation-knowledge/
 | **genie_sim_v3** | 智元 Genie Sim 3.x，OpenUSD + Isaac Sim 的评测/采集/RL 三栈仿真平台 | ⭐ [速查卡](projects/genie_sim_v3/quickstart.md) | ✅ [已完成](projects/genie_sim_v3/background_knowledge.md) | ✅ [已完成](projects/genie_sim_v3/ai_knowledge.md) | ✅ [Q01–Q29](projects/genie_sim_v3/troubleshooting.md) | ✅ [已完成](projects/genie_sim_v3/code_knowledge.md) |
 | **genesis_world** | Genesis World 物理平台，单卡大规模并行 + 刚柔流多物理场 | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 |
 | **ge_sim_v2** | 智元 GE-Sim-V2，视频扩散**生成式世界模型**（非传统物理仿真） | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 |
-| **lw_benchhub** | 光轮 LW-BenchHub，架在 Isaac Lab + IsaacLab-Arena 之上的**薄组合层**操作 benchmark | ⏳ 待编写 | ✅ [已完成](projects/lw_benchhub/background_knowledge.md) | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 |
+| **lw_benchhub** | 光轮 LW-BenchHub，架在 Isaac Lab + IsaacLab-Arena 之上的**薄组合层**操作 benchmark | ⏳ 待编写 | ✅ [已完成](projects/lw_benchhub/background_knowledge.md) | ✅ [已完成](projects/lw_benchhub/ai_knowledge.md) | ✅ [Q01–Q38](projects/lw_benchhub/troubleshooting.md) | ⏳ 待编写 |
 
 ---
 
@@ -99,7 +99,7 @@ simulation-knowledge/
 
 | 我要做的事 | 建议路径 |
 |---|---|
-| **手上有一条报错，先判断是不是已知坑** | ⭐ **`troubleshooting.md` 顶部「快速症状索引」** —— 按现象直接查到 `Qxx`（genie_sim_v3 有 29 条） |
+| **手上有一条报错，先判断是不是已知坑** | ⭐ **`troubleshooting.md` 顶部「快速症状索引」** —— 按现象直接查到 `Qxx`（genie_sim_v3 有 **29** 条；lw_benchhub 有 **38** 条，索引栏写的是**逐字报错原文**，可直接 `Ctrl-F`） |
 | **把某个已复现的工具链跑起来（完整命令）** | ⭐⭐ **先看 `quickstart.md`**（若该项目有）—— 最短路径 + 自检清单；不够细再进 **`code_knowledge.md` §2「入口点与运行方式」**（容器启动、逐条 `docker exec`、环境变量总表） |
 | **改代码 / 加新任务 / 改配置项** | ⭐ **`code_knowledge.md` §3 核心模块 + §4 配置系统**（含"注册新任务必改的 6 处"） |
 | **换机器或换显卡前的兼容性检查** | **`code_knowledge.md` §7.5 平台假设 + §5.5 版本约束** —— 编译期写死的 GPU 架构是最常见的坑 |
@@ -122,6 +122,6 @@ simulation-knowledge/
 ## 知识库现状
 
 - **已完成（五层齐备）**：1 个项目（genie_sim_v3）—— 原理层 1694 行（9 章齐备，含传感器仿真深挖）＋ 经验层 393 行（五阶段复现复盘，18 个问题条目 / 10 个决策 / 8 条教训）＋ 排障层 605 行（`Q01`–`Q29` FAQ，按现象检索）＋ **代码层 1251 行**（对应复现仓库 `genie_sim_v3_tour`，8 章：结构 / 入口 / 核心模块 / 配置 / 依赖 / 修改点 / 注意事项 / 四层关联）＋ **速查层 385 行**（`quickstart.md`：环境准备 / 运行示例 / 改参数 / 常见代码问题 / 自检清单）
-- **进行中**：1 个项目（**lw_benchhub**）—— **原理层 1442 行已完成**（9 章齐备，含 §2.6 传感器仿真 13 小节、§4.2 规模数字实测校准、§8.3 十五项已验证代码缺陷、§8.7 未找到清单）；经验层 / 排障层 / 代码层 / 速查层待编写
+- **进行中**：1 个项目（**lw_benchhub**）—— **原理层 1459 行**（9 章齐备，含 §2.6 传感器仿真 13 小节、§4.2 规模数字实测校准、§8.3 十五项已验证代码缺陷、§8.7 未找到清单）+ **经验层 411 行**（`P01`–`P38` / `D01`–`D18` / `L01`–`L08`）+ **排障层 862 行**（`Q01`–`Q38`，5 组，带快速症状索引与贡献指南）已完成；**代码层 / 速查层待编写**
 - **源料就绪、待编写**：2 个项目（genesis_world / ge_sim_v2），`sources/<slug>/` 下已有 URL 清单与原始资料，且本机均有对应的实战仓库可交叉验证
-- **下一步建议**：补齐 lw_benchhub 的剩余四层（经验层 → 由其 §4 派生排障层 → 代码层 → 速查层），再按同一模板处理 genesis_world 与 ge_sim_v2。每篇完成后同步更新本文件、`projects/00-index.md` 与该项目 `00-index.md` 三处
+- **下一步建议**：补齐 lw_benchhub 的剩余两层（**代码层**（对应本机 `lw_benchhub_tour/`）→ **速查层**），再按同一模板处理 genesis_world 与 ge_sim_v2。每篇完成后同步更新本文件、`projects/00-index.md` 与该项目 `00-index.md` 三处

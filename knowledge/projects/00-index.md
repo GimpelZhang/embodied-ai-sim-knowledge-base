@@ -13,7 +13,7 @@
 | `genie_sim_v3` | Genie Sim 3.x (`AgibotTech/genie_sim`) | 智元机器人 AgiBot | ✅ 已完成 | [`background_knowledge.md`](genie_sim_v3/background_knowledge.md) | [`ai_knowledge.md`](genie_sim_v3/ai_knowledge.md) | [`troubleshooting.md`](genie_sim_v3/troubleshooting.md) | [`code_knowledge.md`](genie_sim_v3/code_knowledge.md) | [`00-index.md`](genie_sim_v3/00-index.md) |
 | `genesis_world` | Genesis World (`Genesis-Embodied-AI/genesis-world`) | Genesis Embodied AI | ⏳ 待编写 | — | — | — | — | — |
 | `ge_sim_v2` | GE-Sim-V2 (`AgibotTech/GE-Sim-V2`) | 智元机器人 AgiBot | ⏳ 待编写 | — | — | — | — | — |
-| `lw_benchhub` | LW-BenchHub (`LightwheelAI/LW-BenchHub`) | 光轮智能 Lightwheel | 🚧 原理层已完成 | [`background_knowledge.md`](lw_benchhub/background_knowledge.md) | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 | [`00-index.md`](lw_benchhub/00-index.md) |
+| `lw_benchhub` | LW-BenchHub (`LightwheelAI/LW-BenchHub`) | 光轮智能 Lightwheel | 🚧 四层已完成（缺速查层） | [`background_knowledge.md`](lw_benchhub/background_knowledge.md) | [`ai_knowledge.md`](lw_benchhub/ai_knowledge.md) | [`troubleshooting.md`](lw_benchhub/troubleshooting.md) | ⏳ 待编写 | [`00-index.md`](lw_benchhub/00-index.md) |
 
 **四类文档的分工**（按"手上有什么"选）：
 
@@ -90,11 +90,16 @@
 ## 4. lw_benchhub — LW-BenchHub
 
 - **开发方**：光轮智能（LightwheelAI）
-- **background 文档**：[`lw_benchhub/background_knowledge.md`](lw_benchhub/background_knowledge.md)（1442 行，9 章齐备，含 §2.6 传感器仿真 13 小节）
-- **ai_knowledge 文档**：⏳ 待编写
-- **troubleshooting 文档**：⏳ 待编写
+- **background 文档**：[`lw_benchhub/background_knowledge.md`](lw_benchhub/background_knowledge.md)（1459 行，9 章齐备，含 §2.6 传感器仿真 13 小节）
+- **ai_knowledge 文档**：[`lw_benchhub/ai_knowledge.md`](lw_benchhub/ai_knowledge.md)（411 行，8 章齐备，`P01`–`P38` / `D01`–`D18` / `L01`–`L08`，`[实践]` 级）
+- **troubleshooting 文档**：[`lw_benchhub/troubleshooting.md`](lw_benchhub/troubleshooting.md)（862 行，`Q01`–`Q38` 分 5 组，顶部带**快速症状索引**，`[实践]` 级）
 - **code_knowledge 文档**：⏳ 待编写（对应 `lw_benchhub_tour/`）
 - **项目内索引**：[`lw_benchhub/00-index.md`](lw_benchhub/00-index.md) ← **先读这个拿行号**
+
+**复现经验摘要**（经验层 + 排障层）
+一次跨约 3 周、分四阶段的本机复现：① 装通 5 层技术栈（Isaac Sim 5.1.0 / Isaac Lab 2.3.2 / IsaacLab-Arena 0.1.1 / lw_benchhub 0.1.0 / lerobot 0.5.1）并跑通 VLA 评测 —— **π0.5 路线 0%，换 SmolVLA + DoublePiper 后取得 40%（4/10）**，此路径成为后续全部阶段复用的"黄金路径"；② LLM 驱动场景生成做课程难度分级；③ 策略接入接口梳理；④ scripted cuRobo 管线自动产数据集 —— **未达成**，卡在规划器 EE link 与仿真 TCP link 相差 **0.30 m**。
+**最高价值的三条教训**：⚠️ **动手"修复 X"之前先量化"X 是否真的发生"**（本次为一个根本不存在的"物体被推开 0.109 m"修了三轮，是最大的一笔时间浪费）；⚠️ **任何写进配置或计划的键 / 字段 / ID，落笔前必须 grep 到它的定义处或读取处**（此类错误复发 ≥5 次）；⚠️ **成功判定只能信环境返回的信号** —— 管线自报的 `success=True` 会把失败轨迹标成成功、污染数据集。
+**四条本次未解决**：`Q34` EE/TCP 0.30 m 偏差（5 种修法逐一被阻断）、`Q31` 同进程多次批量规划触发 cuRobo 内部 shape mismatch、`Q36` 数据集 PNG 导出约 40 分钟（三条优化思路已验证无效）、`Q24` 某 layout 在 boot 阶段无限挂起。
 
 **简短总结**
 Lightwheel 出品的机器人操作 benchmark，本质是**架在 Isaac Lab + IsaacLab-Arena 之上的"薄组合层"**：自身不含仿真器、不含管理器系统、不含 RL 算法，核心机制是把 scene / robot / task / rl 四类 id 经 Gymnasium 注册表做**四路组合**，并对 isaaclab 打 **9 处 monkey patch**（其中一处在给上游已删除的 API 做生命维持 ⇒ **升级 isaaclab 会直接破坏它**）。任务库分两族且设计哲学相反：LIBERO 系钉死 USD 资产与坐标（低方差，适合基线），RoboCasa 系按类别采样 + 干扰物（高方差，适合泛化评测）。⚠️ **README 的规模宣称需按实测校准**：任务实为 **272**（非 268）、机器人变体 **28**（非 27）、layout id 可达 **62**（非"100 组合"）、**rsl-rl 只注册不执行**；且 272 个任务里**只有 6 个 RL 配置且全挂在 `LiftObj` 上**。**已知短板**：传感器只做配置层组装、无任何自研模型 —— 9 种相机全部仅输出 RGB，深度 / 激光 / IMU / 触觉 / 6 维力矩 / 关节力矩与**噪声模型**均经 grep 确认缺失（`enable_corruption=True` 是空转的假开关）；资产**运行时联网**从 Lightwheel 云端拉取，离线不可用。
