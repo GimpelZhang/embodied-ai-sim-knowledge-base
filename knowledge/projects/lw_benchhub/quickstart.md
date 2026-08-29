@@ -8,7 +8,7 @@
 > | 代码在哪、哪些是本地改的、有哪些静默失效 | [`code_knowledge.md`](code_knowledge.md)（952 行，用 §号跳） |
 > | 一条具体报错怎么修 | [`troubleshooting.md`](troubleshooting.md) 顶部「快速症状索引」（`Q01`–`Q38`） |
 > | 为什么当初这么选、试过哪些无效 | [`ai_knowledge.md`](ai_knowledge.md) §4 问题表（`P01`–`P38`） |
-> | API / 设计原理 / 能力边界 | [`background_knowledge.md`](background_knowledge.md)（1471 行） |
+> | API / 设计原理 / 能力边界 | [`background_knowledge.md`](background_knowledge.md)（1478 行） |
 >
 > **证据等级**：`[CODE]` 可在仓库核实 ｜ `[实践]` 本机踩坑记录，**不是官方结论**。
 > **本文是派生层**：与被引用的那一层冲突时，**以那一层为准**（尤其代码细节以 `code_knowledge.md` 为准）。
@@ -264,6 +264,22 @@ python <repo_root>/stage4_flywheel/scripts/build_policy_demos_dataset.py
 2. **用环境变量关 `torch.compile`** —— 只设 `TORCH_COMPILE_DISABLE=1` / `TORCHINDUCTOR_DISABLE=1` **无效**，代码里是显式函数调用，必须改配置源头（[`Q19`](troubleshooting.md#q19)、教训 `L04`）。
 3. **给单相机 VLA 加左右手相机** —— 四层证据链否定，架构被训练为忽略第 2/3 路。要 3 相机必须重采数 + 重训（[`Q20`](troubleshooting.md#q20)）。
 
+### 3.4 ⚠️⚠️ 改参数前必读：命令行拗不过 YAML
+
+`[CODE]`
+
+8 个入口脚本都有这一行 —— `args_cli.__dict__.update(yaml_args.__dict__)`（`scripts/teleop/teleop_main.py:141` 等）。它在 `parse_args()` 之后、把参数交给 `AppLauncher` 之前执行，**所以 YAML 里的同名键会静默丢弃你在命令行显式传的值，没有任何警告**。
+
+最常中招的一次：`configs/data_collection/teleop/teleop_base.yml:6` 写着 `device: cpu`，于是
+
+```bash
+./teleop.sh --task_config double_piper --device cuda:0   # ❌ --device 被丢弃，实际跑在 CPU 上
+```
+
+症状是**"莫名奇妙地慢"而不是报错**。同类键：`num_envs`、`enable_cameras`、`headless`。
+
+**规则：要改这些值就去改 YAML（或新建一个 `_base_` 继承它的 YAML），不要加命令行参数。** 完整推导见 [`background_knowledge.md`](background_knowledge.md) §6.1 推论 4 与 §8.3 第 16 条。
+
 ---
 
 ## 4. 常见代码问题
@@ -380,7 +396,7 @@ pkill -9 -f "[i]saacsim"             # ② 方括号技巧：否则 pkill -f 会
 | [`code_knowledge.md`](code_knowledge.md) | 代码层（952 行，8 章）。**本文的所有代码细节以它为准。**§2 入口点 · §3 核心模块 · §4 配置 · §6 修改点 · §7 陷阱 |
 | [`troubleshooting.md`](troubleshooting.md) | 排障层（`Q01`–`Q38`）。**带报错时的最快路径**，顶部有「快速症状索引」 |
 | [`ai_knowledge.md`](ai_knowledge.md) | 经验层（`P01`–`P38` / `D01`–`D17` / `L01`–`L08`）。想知道**试过哪些无效方法**看 §4 的"无效尝试"列 |
-| [`background_knowledge.md`](background_knowledge.md) | 原理层（9 章，1471 行）。API / 设计原理 / 能力边界 |
+| [`background_knowledge.md`](background_knowledge.md) | 原理层（9 章，1478 行）。API / 设计原理 / 能力边界 |
 | [`00-index.md`](00-index.md) | 项目级章节地图与行号表 |
 
 > **本文是派生层**，不引入新事实。与被引用层冲突时以那一层为准。

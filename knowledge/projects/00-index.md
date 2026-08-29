@@ -90,11 +90,11 @@
 ## 4. lw_benchhub — LW-BenchHub
 
 - **开发方**：光轮智能（LightwheelAI）
-- **background 文档**：[`lw_benchhub/background_knowledge.md`](lw_benchhub/background_knowledge.md)（1471 行，9 章齐备，含 §2.6 传感器仿真 13 小节）
+- **background 文档**：[`lw_benchhub/background_knowledge.md`](lw_benchhub/background_knowledge.md)（1478 行，9 章齐备，含 §2.6 传感器仿真 13 小节）
 - **ai_knowledge 文档**：[`lw_benchhub/ai_knowledge.md`](lw_benchhub/ai_knowledge.md)（432 行，8 章齐备，`P01`–`P38` / `D01`–`D18` / `L01`–`L08`，`[实践]` 级）
 - **troubleshooting 文档**：[`lw_benchhub/troubleshooting.md`](lw_benchhub/troubleshooting.md)（864 行，`Q01`–`Q38` 分 5 组，顶部带**快速症状索引**，`[实践]` 级）
 - **code_knowledge 文档**：[`lw_benchhub/code_knowledge.md`](lw_benchhub/code_knowledge.md)（952 行，8 章齐备，对应复现仓库 `lw_benchhub_tour/`，`[CODE]`×72 / `[实践]`×15 / `[推断]`×8）
-- ⭐ **quickstart 速查卡**：[`lw_benchhub/quickstart.md`](lw_benchhub/quickstart.md)（387 行，环境准备 / 3 个带预期输出的运行示例 / 改参数 / 9 个常见代码问题 / 一分钟自检清单）——**要动手先读这个**
+- ⭐ **quickstart 速查卡**：[`lw_benchhub/quickstart.md`](lw_benchhub/quickstart.md)（403 行，环境准备 / 3 个带预期输出的运行示例 / 改参数 / 9 个常见代码问题 / 一分钟自检清单）——**要动手先读这个**
 - **项目内索引**：[`lw_benchhub/00-index.md`](lw_benchhub/00-index.md) ← **先读这个拿行号**
 
 **复现经验摘要**（经验层 + 排障层）
@@ -112,7 +112,7 @@ Lightwheel 出品的机器人操作 benchmark，本质是**架在 Isaac Lab + Is
 `物理仿真` `IsaacSim` `IsaacLab` `lerobot生态` `双臂操作` `VLA闭环` `评测基准` `场景生成-LLM驱动` `数据飞轮` `课程学习` `运动规划-cuRobo` `数据采集` `遥操作` `传感器仿真` `容器化部署`
 
 **四个"别踩"提醒**（详见项目内索引末尾）
-① 别升级 isaaclab 或 Arena 子模块（Arena 被 pin 在 `c7b70779`，**10 处（本机 11 处）** patch 按该版本写死）；② 别相信 README 数字，也别相信注释（`g1.py:997` 注释写 100Hz 而代码是 200Hz）；③ 别以为 `enable_corruption=True` 就有观测噪声；④ **别在没确认"改的是哪一份 IsaacLab"之前调参**（仓库内有两份，973 处差异，见 `code_knowledge.md` §7.3）。另有 **15 项已验证代码缺陷**（含 `teleop_device` 被硬编码成 `None`、配置键拼错成 `remote_protocal`、`rl_on` 断言形同虚设）与 **8 条安装部署限制**（含 torch 2.7.0 vs 2.5.1 冲突、`docker/Dockerfile` 当前就会失败、Arena 子模块用 SSH URL）见 `background_knowledge.md` §8.3 / §8.5。
+① 别升级 isaaclab 或 Arena 子模块（Arena 被 pin 在 `c7b70779`，**10 处（本机 11 处）** patch 按该版本写死）；② 别相信 README 数字，也别相信注释（`g1.py:997` 注释写 100Hz 而代码是 200Hz）；③ 别以为 `enable_corruption=True` 就有观测噪声；④ **别在没确认"改的是哪一份 IsaacLab"之前调参**（仓库内有两份，973 处差异，见 `code_knowledge.md` §7.3）。另有 **16 项已验证代码缺陷**（含 `teleop_device` 被硬编码成 `None`、配置键拼错成 `remote_protocal`、`rl_on` 断言形同虚设、**YAML 静默覆盖命令行含 `--device`**）与 **8 条安装部署限制**（含 torch 2.7.0 vs 2.5.1 冲突、`docker/Dockerfile` 当前就会失败、Arena 子模块用 SSH URL）见 `background_knowledge.md` §8.3 / §8.5。
 
 **本机相关资源**（均已 gitignore，仅本地有效）
   - 源料：`sources/lw_benchhub/background.txt`（LightwheelAI 组织 + LW-BenchHub + 平台主页 + IsaacLab-Arena + AutoDataGen）

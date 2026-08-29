@@ -1090,16 +1090,22 @@ lw_benchhub
 **理解这三行，就理解了这个仓库的全部配置流程** `[CODE]` `lw_benchhub/scripts/teleop/teleop_main.py:131`、`:140`、`:141`：
 
 ```python
-parser.add_argument("--task_config", type=str, default="teleop_base")   # 只给 stem，不给路径
-cfg = load_config(args_cli.task_config)                                 # 递归解析 _base_
-Context.get_instance().update_from_config(cfg)                          # 灌进全局单例
+parser.add_argument("--task_config", type=str, default=None, help="task config")  # 只给 stem，不给路径
+# ... AppLauncher.add_app_launcher_args(parser)  :137   ← 注意它也往同一个 parser 挂参数
+args_cli   = parser.parse_args()                        #  :139
+yaml_args  = config_loader.load(args_cli.task_config)   #  :140  递归解析 _base_
+args_cli.__dict__.update(yaml_args.__dict__)            #  :141  ⚠️ YAML 覆盖 CLI，方向别记反
+app_launcher_args = vars(args_cli)                      #  :143  已被覆盖后的值才交给 AppLauncher
 ```
 
-三个推论：
+> 📌 **2026-08 复核更正**：本节此前给出的是 `cfg = load_config(...)` + `Context.get_instance().update_from_config(cfg)`。**该写法在上游仓库中不存在**（`grep -rn "update_from_config" --include=*.py` 全仓库零命中；`load_config` 只是 `core/mdp/actions/wbc_policy/utils/homie_utils.py:19` 的无关同名 helper）。真实写法即上方代码块，**8 个入口脚本逐字节相同** `[CODE]`：`scripts/teleop/teleop_main.py:141`、`teleop/teleop_check_consistency.py:117`、`rl/train.py:38`、`rl/play.py:38`、`maniskill_ppo/train.py:39`、`maniskill_ppo/play.py:39`、`maniskill_ppo/eval_real.py:40`、`maniskill_ppo/camera_alignment.py:45`。
+
+四个推论：
 
 1. **`--task_config` 永远只写文件名主干，不带目录、不带扩展名。** `configs/` 下的整棵树被 `rglob` 扁平化成 stem → 路径的字典 `[CODE]` `lw_benchhub/utils/config_loader.py:31`、`:34`。
 2. ⚠️ **stem 冲突是"后写入者胜"**：先 rglob 全部 `.yml`（`:31`），再 rglob 全部 `.yaml`（`:34`）覆盖进同一个 dict。**两个不同目录下的同名文件会静默互相覆盖，且 `.yaml` 一定压过 `.yml`。** 新增配置时先确认 stem 全局唯一。
 3. **`_base_` 继承是递归的**，子配置覆盖父配置，最终转成 `argparse.Namespace` `[CODE]` `:66`、`:72`、`:85`、`:88`、`:89`。所以配置对象在脚本里是用 `cfg.xxx` 而不是 `cfg["xxx"]` 访问的。
+4. ⚠️⚠️ **YAML 优先于命令行，包括 AppLauncher 的参数** —— 这是本仓库最容易吃亏的静默陷阱。`:141` 的 `dict.update(yaml)` 发生在 `parse_args()`（`:139`）**之后**、`vars(args_cli)` 交给 AppLauncher（`:143`）**之前**，所以**只要 YAML 里写了同名键，你在命令行显式传的值就被丢弃，且无任何警告** `[CODE]`。已确认的活雷区：`configs/data_collection/teleop/teleop_base.yml:6` 写着 `device: cpu` —— 因此 `./teleop.sh --device cuda:0` **实际仍跑在 CPU 上**（表现为"莫名奇妙地慢"而非报错）。同类键还有 `num_envs`、`enable_cameras`（`teleop_base.yml:5`、`:59`；`rl_base.yml:5`、`:8`、`:50`；`teleop_ci.yml:3-8` 等）。**要改这些值，改 YAML，不要加命令行参数**；上游 issue #29（`cfg.headless` 被静默覆盖）就是这个模式的产物（§8）。
 
 `configs/` 共 30 个文件，分 6 个子目录；命名约定：`*_base`（可继承的基类）、`ci_*`（CI 用的缩水配置）、`*_play`（评测/回放）。⚠️ **`configs/rl/rsl_rl/` 不存在** —— 与 §4.7 的结论一致。
 
@@ -1307,7 +1313,7 @@ register_pipeline(id="LWBenchhub-Autosim-<Name>Pipeline-v0",
 
 完整对照表见 **§4.2**，此处只列结论 `[CODE]`：任务数 **272 而非 268**；机器人变体 **28 而非 27**；layout **可达 62 而非 100 组合**；**rsl-rl 只注册不执行**。
 
-### 8.3 已验证的代码缺陷（15 项）
+### 8.3 已验证的代码缺陷（16 项）
 
 全部经 grep/读码确认 `[CODE]`。**标 ⚠️ 的会实际影响使用**：
 
@@ -1328,6 +1334,7 @@ register_pipeline(id="LWBenchhub-Autosim-<Name>Pipeline-v0",
 | 13 | ⚠️ **`CONFIGS_PATH` 要求源码签出** | `lw_benchhub/__init__.py:2` | 非 editable 安装直接不可用（§5.3） |
 | 14 | `bounce_threshold_velocity` 在三处被重复设置 | `core/tasks/base.py:250-251`、`core/rl/base.py:77-78`、`core/scenes/kitchen/kitchen.py:156-157` | 物理参数的最终值取决于覆盖顺序，不易预测 |
 | 15 | 注释与代码矛盾 | `g1.py:997`：`sim.dt = 1/200  # physics frequency: 100Hz` | **注释是错的**，实际 200 Hz。调物理频率时别信注释 |
+| 16 | ⚠️⚠️ **YAML 静默覆盖命令行参数（含 AppLauncher）** | `args_cli.__dict__.update(yaml_args.__dict__)` —— 8 个入口脚本各一处（`teleop_main.py:141` 等，全表见 §6.1） | **命令行显式传的 `--device` / `--num_envs` / `--enable_cameras` 会被 YAML 同名键丢弃且无警告**。`teleop_base.yml:6` 是 `device: cpu` ⇒ `--device cuda:0` 无效、实际跑 CPU（§6.1 推论 4） |
 
 ### 8.4 传感器能力的硬边界（这是选型时最该看的一节）
 
