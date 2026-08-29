@@ -1,0 +1,11 @@
+# 原始资料与上游仓库克隆（体积大，本机专有）
+sources/
+
+# 实战复现仓库（各自是独立的 git repo）
+genesis-world-tour/
+genie_sim_v3_tour/
+GE-Sim-V2-tour/
+lw_benchhub_tour/
+
+# 工具链运行时状态（会话、缓存、检查点），非知识内容
+.omc/
