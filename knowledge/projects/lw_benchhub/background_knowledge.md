@@ -215,9 +215,13 @@ lw_benchhub_rl      = "lw_benchhub_rl"
 | 成功判定是否生效 | 任务的 `_check_success` 在 TRAIN 模式下短路返回全 False（训练走 reward shaping，不走成功信号） | `lw_benchhub_tasks/lightwheel_robocasa_tasks/single_stage/lift_obj.py:85` |
 | UI 窗口 | TELEOP 模式下把 `ui_window_class_type` 置空 | `lw_benchhub/core/cfg/__init__.py:21-23` |
 
-### 2.5 对 isaaclab 的 9 处 monkey patch
+### 2.5 对 isaaclab 的 monkey patch（上游 10 处）
 
-`lw_benchhub/core/__init__.py` 只有一行 `from lw_benchhub.utils import monkey_patch`，因此**只要 import 了 `lw_benchhub.core`，9 个补丁就已经打上了**，无法选择性关闭 `[CODE]` `lw_benchhub/utils/monkey_patch.py:681-690`。
+> ⚠️ **数字更正（2026-08 复核）**：本节原标题写"9 处"，但下表本身就有 **10 行** —— 上游实为 **10 处**，`monkey_patch.py:681-690` 连续调用 10 个补丁函数 `[CODE]`。
+> 本机复现仓库 `lw_benchhub_tour` 里是 **11 处** —— 本地新增了第 11 个补丁 `patch_xform_prim_view_auto_standardize`（`:708-743`，强制 `validate_xform_ops=False`，用于绕过 Isaac Sim 5.1 的 xformOp 顺序硬校验），并因此使本节所有行号在该仓库中下移。
+> **要在本机改补丁、或需要带行号的完整补丁表，看代码层** → [`code_knowledge.md`](code_knowledge.md) §3.1（M1 模块，11 行全表）与 §6.2 #1（改动归因）、§6.6／§8.4（本条更正的出处）。
+
+`lw_benchhub/core/__init__.py` 只有一行 `from lw_benchhub.utils import monkey_patch`，因此**只要 import 了 `lw_benchhub.core`，全部补丁就已经打上了**，无法选择性关闭 `[CODE]` `lw_benchhub/utils/monkey_patch.py:681-690`。
 
 | 补丁函数 | 位置 | 改了 isaaclab 的什么 |
 |---|---|---|
@@ -949,11 +953,14 @@ git-lfs 只管仓库内提交的文件（`.gitattributes` 仅 4 行：`*.onnx`�
 
 > 排障入口：装不上或跑不起来时，先看 [`troubleshooting.md`](troubleshooting.md)，再回来看本章的机制解释。
 >
-> 📌 **本机实测的安装踩坑集中在 [`troubleshooting.md`](troubleshooting.md) 的 A 组 `Q01`–`Q16`**（L92–352）。本章只给官方声明的依赖，**以下四条实测硬约束本章未涉及、但不满足就装不通**（`[实践]` 级，出处 `ai_knowledge.md` §1.2、§4.A）：
+> 📌 **本机实测的安装踩坑集中在 [`troubleshooting.md`](troubleshooting.md) 的 A 组 `Q01`–`Q16`**（L94–354）。本章只给官方声明的依赖，**以下四条实测硬约束本章未涉及、但不满足就装不通**（`[实践]` 级，出处 `ai_knowledge.md` §1.2、§4.A）：
 > - **`numpy==1.26.0` 必须最后装，且每次 pip 操作后重新锁回**（Isaac Sim 的 C 扩展硬绑该版本）→ [`Q03`](troubleshooting.md#q03)
 > - **`warp-lang==1.8.1`** 是唯一可获得的同 minor 版本 → [`Q11`](troubleshooting.md#q11)
 > - 运行脚本必须 `set +u`（不是 `set -u`）→ [`Q14`](troubleshooting.md#q14)
 > - 必须 `unset CUDA_VISIBLE_DEVICES`，否则相机初始化 segfault 且无 traceback → [`Q15`](troubleshooting.md#q15)
+>
+> 📌 **本机实际装成什么样，看代码层** → [`code_knowledge.md`](code_knowledge.md) §5「依赖与环境」：§5.1 全部锁定版本号（Isaac Sim 5.1.0 / Isaac Lab v2.3.2 / Arena `release/0.1.1` / lerobot 0.5.1 / cuRobo 0.7.7 editable）、§5.2 打包文件分布（⚠️ **仓库根目录没有 `requirements.txt` 或 `pyproject.toml`**，本章的"声明依赖"要到各子包里找）、§5.3 cuRobo 的编译期环境变量、§5.4 五个版本耦合点。
+> 📌 **要照抄一份可执行的准备步骤** → [`quickstart.md`](quickstart.md) §1（含四个硬锁版本与六行运行前奏）。
 
 ### 5.1 硬件与驱动底线
 
@@ -1068,12 +1075,15 @@ lw_benchhub
 
 > 想直接上手敲命令，先看 [`quickstart.md`](quickstart.md)（若已生成）；本章解释流程背后的机制。
 >
-> 📌 **本章描述"该怎么跑"，但跑起来之后最容易撞上的三件事本章看不出来**（`[实践]` 级，见 [`troubleshooting.md`](troubleshooting.md) B 组 L353–508）：
+> 📌 **本章描述"该怎么跑"，但跑起来之后最容易撞上的三件事本章看不出来**（`[实践]` 级，见 [`troubleshooting.md`](troubleshooting.md) B 组 L355–510）：
 > - 成功率 **0%、机器人只轻微抽搐** → HF checkpoint 自带 `compile_model: True`，环境变量关不掉 → [`Q19`](troubleshooting.md#q19)
 > - 加载 checkpoint 时**几百个 key 不匹配只报一句 warning**，权重被静默随机初始化 → [`Q18`](troubleshooting.md#q18)
 > - **换任务或换场景后成功率一律 0%** —— 是 OOD 而非配置错 → [`Q22`](troubleshooting.md#q22)
 >
 > 本机跑通的具体命令与配置组合见 [`ai_knowledge.md`](ai_knowledge.md) §1.3（两条评测路径对照）。
+>
+> 📌 **想直接敲命令** → ⭐ [`quickstart.md`](quickstart.md) §2 三个带**预期输出**的运行示例（示例 A = 唯一成功闭环的 40% 基准评测）；改参数看 §3，动手前过一遍 §5 自检清单。
+> 📌 **要完整入口点清单与本机实测数字** → [`code_knowledge.md`](code_knowledge.md) §2：§2.1 六行运行前奏（⚠️ 比本章 §6.1 的"三行范式"多三行，本机缺一行就跑不起来）、§2.2 入口点总表、§2.3 ★路径 B **40%（4/10）/ 10m39s**、§2.7 采数 29 eps → 34.5%、§2.8 scripted PnP **8/8 全失败**。
 
 ### 6.1 所有脚本共用的三行范式
 
@@ -1271,7 +1281,9 @@ register_pipeline(id="LWBenchhub-Autosim-<Name>Pipeline-v0",
 >
 > 📌 本机复现过程中实际踩到的坑及其无效尝试记录，见 [`ai_knowledge.md`](ai_knowledge.md) §4。
 >
-> ⚠️ **本章尚未收录 6 处仅由实践发现的限制**（清单见 [`ai_knowledge.md`](ai_knowledge.md) **§7.3**，L350–362）。它们是 `[实践]` 级、未在上游仓库核实，因此**没有并入本章的 `[CODE]` 级清单**；但对"能不能做到"的判断同样重要，评估可行性时请一并读。
+> ⚠️ **本章尚未收录 6 处仅由实践发现的限制**（清单见 [`ai_knowledge.md`](ai_knowledge.md) **§7.3**，L371–385）。它们是 `[实践]` 级、未在上游仓库核实，因此**没有并入本章的 `[CODE]` 级清单**；但对"能不能做到"的判断同样重要，评估可行性时请一并读。
+>
+> 📌 **要"为什么会这样"的代码级机制解释** → [`code_knowledge.md`](code_knowledge.md)：**§7.2 十一条静默失效路径**（改了不报错也不生效——本章多条限制的共同失败形态）、**§7.3 仓库内存在两份 vendored IsaacLab**（973 处差异，改错那份无效，附判别法）、§7.1 硬编码主机路径 79 文件 326 处、**§8.3 22 行 `Qxx` → 代码机制映射**、**§8.4 七条被实测推翻的旧结论**。
 >
 > ⚠️ **四条本机判定为"未解决"的限制**（`[实践]` 级）：规划器 EE 与仿真 TCP 相差 **0.30 m**（[`Q34`](troubleshooting.md#q34)）；同进程多次批量规划触发 cuRobo 内部 shape mismatch（[`Q31`](troubleshooting.md#q31)）；数据集 PNG 导出约 **40 分钟**且三条优化思路均无效（[`Q36`](troubleshooting.md#q36)）；某 layout 在 boot 阶段无限挂起（[`Q24`](troubleshooting.md#q24)）。
 

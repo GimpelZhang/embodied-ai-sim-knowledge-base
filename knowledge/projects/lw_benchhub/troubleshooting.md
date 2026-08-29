@@ -6,6 +6,8 @@
 >
 > **⚠️ 证据等级**：全篇为 `[实践]` 级，即本机一次具体复现过程中的踩坑记录，**不是官方结论**。上游版本迭代后部分现象可能已消失。需要 `[CODE]` / `[README]` 级证据请查 [`background_knowledge.md`](background_knowledge.md)。
 >
+> 📌 **想知道某个现象在代码里的机制**（而不只是修法）→ [`code_knowledge.md`](code_knowledge.md) **§8.3** 有 22 行"`Qxx` → 代码机制"映射表；"改了却没生效"这一类先看其 **§7.2（静默失效 11 条）** 与 **§7.3（仓库内有两份 vendored IsaacLab）**。要照抄命令 → ⭐ [`quickstart.md`](quickstart.md)。
+>
 > **隐私处理**：本机绝对路径统一写作 `<path>`，用户目录写作 `<user_home>`；不含任何账号、口令、密钥、token。
 >
 > **环境基线**（现象能否复现取决于此）：Ubuntu 22.04 无显示器 / A800-40GB `sm_80` / 驱动 580.159.03 / Python 3.11 / Isaac Sim 5.1.0 / Isaac Lab v2.3.2 / IsaacLab-Arena `release/0.1.1` / lw_benchhub 0.1.0 (`-e`) / lerobot 0.5.1 / torch 2.7.0+cu128 / numpy **1.26.0** / warp-lang **1.8.1**。
