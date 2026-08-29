@@ -13,7 +13,7 @@
 | `genie_sim_v3` | Genie Sim 3.x (`AgibotTech/genie_sim`) | 智元机器人 AgiBot | ✅ 已完成 | [`background_knowledge.md`](genie_sim_v3/background_knowledge.md) | [`ai_knowledge.md`](genie_sim_v3/ai_knowledge.md) | [`troubleshooting.md`](genie_sim_v3/troubleshooting.md) | [`code_knowledge.md`](genie_sim_v3/code_knowledge.md) | [`00-index.md`](genie_sim_v3/00-index.md) |
 | `genesis_world` | Genesis World (`Genesis-Embodied-AI/genesis-world`) | Genesis Embodied AI | ⏳ 待编写 | — | — | — | — | — |
 | `ge_sim_v2` | GE-Sim-V2 (`AgibotTech/GE-Sim-V2`) | 智元机器人 AgiBot | ⏳ 待编写 | — | — | — | — | — |
-| `lw_benchhub` | LW-BenchHub (`LightwheelAI/LW-BenchHub`) | 光轮智能 Lightwheel | ⏳ 待编写 | — | — | — | — | — |
+| `lw_benchhub` | LW-BenchHub (`LightwheelAI/LW-BenchHub`) | 光轮智能 Lightwheel | 🚧 原理层已完成 | [`background_knowledge.md`](lw_benchhub/background_knowledge.md) | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 | [`00-index.md`](lw_benchhub/00-index.md) |
 
 **四类文档的分工**（按"手上有什么"选）：
 
@@ -90,13 +90,25 @@
 ## 4. lw_benchhub — LW-BenchHub
 
 - **开发方**：光轮智能（LightwheelAI）
-- **background 文档**：⏳ 未编写
-- **简短总结（来自源料与实战仓库，尚未经 `[CODE]` 级核验）**
-  光轮的统一物理底座，深度集成 NVIDIA **IsaacLab-Arena** 机器人学习框架与 Hugging Face **lerobot** 生态，配套 `AutoDataGen` 数据生成工具。实战路径为双臂 Piper（`DoublePiper-Abs`）在厨房 PnP 任务下的闭环评测基线 → LLM 驱动场景自适应裂变（cuRobo 工作空间 IK 作物理可达性闸门过滤）→ 失败自动诊断 + 课程学习 + VLA 自过滤的数据飞轮。
-- **关键标签**
-  `物理仿真` `IsaacSim` `IsaacLab` `lerobot生态` `双臂操作` `VLA闭环` `评测基准` `场景生成-LLM驱动` `数据飞轮` `课程学习` `运动规划-cuRobo` `数据采集`
-- **本机相关资源**
+- **background 文档**：[`lw_benchhub/background_knowledge.md`](lw_benchhub/background_knowledge.md)（1442 行，9 章齐备，含 §2.6 传感器仿真 13 小节）
+- **ai_knowledge 文档**：⏳ 待编写
+- **troubleshooting 文档**：⏳ 待编写
+- **code_knowledge 文档**：⏳ 待编写（对应 `lw_benchhub_tour/`）
+- **项目内索引**：[`lw_benchhub/00-index.md`](lw_benchhub/00-index.md) ← **先读这个拿行号**
+
+**简短总结**
+Lightwheel 出品的机器人操作 benchmark，本质是**架在 Isaac Lab + IsaacLab-Arena 之上的"薄组合层"**：自身不含仿真器、不含管理器系统、不含 RL 算法，核心机制是把 scene / robot / task / rl 四类 id 经 Gymnasium 注册表做**四路组合**，并对 isaaclab 打 **9 处 monkey patch**（其中一处在给上游已删除的 API 做生命维持 ⇒ **升级 isaaclab 会直接破坏它**）。任务库分两族且设计哲学相反：LIBERO 系钉死 USD 资产与坐标（低方差，适合基线），RoboCasa 系按类别采样 + 干扰物（高方差，适合泛化评测）。⚠️ **README 的规模宣称需按实测校准**：任务实为 **272**（非 268）、机器人变体 **28**（非 27）、layout id 可达 **62**（非"100 组合"）、**rsl-rl 只注册不执行**；且 272 个任务里**只有 6 个 RL 配置且全挂在 `LiftObj` 上**。**已知短板**：传感器只做配置层组装、无任何自研模型 —— 9 种相机全部仅输出 RGB，深度 / 激光 / IMU / 触觉 / 6 维力矩 / 关节力矩与**噪声模型**均经 grep 确认缺失（`enable_corruption=True` 是空转的假开关）；资产**运行时联网**从 Lightwheel 云端拉取，离线不可用。
+
+**关键标签**
+`物理仿真` `IsaacSim` `IsaacLab` `lerobot生态` `双臂操作` `VLA闭环` `评测基准` `场景生成-LLM驱动` `数据飞轮` `课程学习` `运动规划-cuRobo` `数据采集` `遥操作` `传感器仿真` `容器化部署`
+
+**三个"别踩"提醒**（详见项目内索引末尾）
+① 别升级 isaaclab 或 Arena 子模块（Arena 被 pin 在 `c7b70779`，9 处 patch 按该版本写死）；② 别相信 README 数字，也别相信注释（`g1.py:997` 注释写 100Hz 而代码是 200Hz）；③ 别以为 `enable_corruption=True` 就有观测噪声。另有 **15 项已验证代码缺陷**（含 `teleop_device` 被硬编码成 `None`、配置键拼错成 `remote_protocal`、`rl_on` 断言形同虚设）与 **8 条安装部署限制**（含 torch 2.7.0 vs 2.5.1 冲突、`docker/Dockerfile` 当前就会失败、Arena 子模块用 SSH URL）见 `background_knowledge.md` §8.3 / §8.5。
+
+**本机相关资源**（均已 gitignore，仅本地有效）
   - 源料：`sources/lw_benchhub/background.txt`（LightwheelAI 组织 + LW-BenchHub + 平台主页 + IsaacLab-Arena + AutoDataGen）
+  - 上游仓库克隆：`sources/lw_benchhub/LW-BenchHub/`、`IsaacLab-Arena/`、`AutoDataGen/` ← **`[CODE]` 级证据在这里核实**
+  - 复现原始日志：`sources/lw_benchhub/lw_benchhub_tour.md`（**混合流水日志与已完成文档，不是纯时间序**）
   - 实战复现仓库：`lw_benchhub_tour/`（内含 `lw_benchhub/`、`IsaacLab/`、`IsaacLab-Arena/`、`lerobot/`、`AutoDataGen/` 多个子仓库，以及 stage2/stage4 报告）
 
 ---
@@ -111,7 +123,9 @@
 | **软体 / 布料 / 流体**耦合 | `genesis_world`；退而求其次 `genie_sim_v3` 的 Newton-standalone | genie_sim 仅该后端支持布料软体，且为实验路径 |
 | 已在 **lerobot / IsaacLab** 生态里，想少改代码 | `lw_benchhub` | 直接复用 IsaacLab-Arena + lerobot 数据与策略接口 |
 | 想**跳过物理**、只做视觉级泛化与快速衍生 | `ge_sim_v2` | 生成式世界模型，无物理解算 |
-| **传感器保真度**要求高（深度/LiDAR/IMU 噪声） | ⚠️ 四者都要先查缺口 | genie_sim_v3 已确认仅 RGB 有噪声模型；其余三者未核验 |
+| **传感器保真度**要求高（深度/LiDAR/IMU 噪声） | ⚠️ 四者都要先查缺口 | genie_sim_v3 已确认仅 RGB 有噪声模型；**`lw_benchhub` 已确认最弱 —— 只有 RGB，且无任何噪声模型**；其余两者未核验 |
+| **多本体横向对比**（同任务换机器人） | `lw_benchhub` | 28 个机器人变体 × 272 个任务的组合注册表；但**位姿需查 `layout_task_mapping.csv`**（§4.5） |
+| **离线 / 内网环境**部署 | ⚠️ 避开 `lw_benchhub` | 场景与物体资产运行时联网从 Lightwheel 云端拉取，无独立下载脚本（§4.10） |
 
 ---
 
