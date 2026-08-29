@@ -1081,6 +1081,10 @@ Robust 的 5 类扰动为：**指令改写、机器人位姿、背景、图像�
 
 ## 5. 安装与依赖
 
+> **📌 实际装机会遇到本章没写的前置条件。** 本章给的是官方声明的依赖与步骤；一次真实部署里额外踩了 10 个坑（代理须三层各配、容器不注入 GL/Vulkan 库、容器 UID 1234 权限、驱动版本被 Vulkan 误读、`entrypoint` 的 `set -e`、tmpfs 重启丢库……）。
+> **开工前建议先扫一遍** [`troubleshooting.md`](troubleshooting.md) §一~§三（行 55–265，`Q01`–`Q11`），可省掉大量试错；每坑的完整排查过程见 [`ai_knowledge.md`](ai_knowledge.md) §4.1–4.2（行 150–168）。
+> ⚠️ **最硬的一条前置条件本章未列**：Isaac Sim 5.1 要求 **Compute Capability ≥ 7.5（Turing+）的硬件 RT cores**，V100 的 7.0 装完也跑不起来，且无软件替代方案 —— 见 [`Q11`](troubleshooting.md)。
+
 ### 5.1 系统要求
 
 `[CODE]` / `[README]`
@@ -1182,6 +1186,10 @@ pip install -e "source/geniesim/[teleop]"     # 或 generator / world / all / fu
 ## 6. 基本使用流程
 
 两条栈的入口完全不同，下面各给一条典型流程。
+
+> **📌 流程跑起来后最常见的失败不是报错，而是"看起来在跑但没有产出"。** 实测三种假象：日志以 ~18 Hz 持续刷屏而干活线程已被超时静默杀死、容器 `Up` 但端口根本没监听、录制开关全开却因源码里调用点被注释而无文件落盘。
+> 判据与修法见 [`troubleshooting.md`](troubleshooting.md) §五（行 314–380，`Q15`–`Q18`）。**最省时的单一判据：GPU 利用率仅 1–2% 且显存占用为 0，说明渲染/初始化早已失败**，不要相信 CPU 占用率。
+> 另：自定义任务的注册要求（3 张查找表 + 6 个配置文件）本章未覆盖，见 [`ai_knowledge.md`](ai_knowledge.md) §7.2（行 312）。
 
 ### 6.1 流程 A：Benchmark 评测（加载场景 → 载入机器人 → 跑策略闭环）
 
@@ -1453,6 +1461,18 @@ ParameterServer
 ## 8. 已知问题与限制
 
 > 说明：8.1–8.5 中标 `[README]` / `[CODE]` 的是仓库文档明确声明的限制；标 `[实践]` 的来自本地一份完整的安装/调试记录（含自定义 3DGS 流水线与外部 VLA 服务的集成），属使用者踩坑而非官方声明，但复现性高、诊断价值大。
+>
+> **📌 手上已经有报错时，不要从本章开始读。** 本章按"限制类型"组织，回答"这东西能不能做"；若你要的是"这条报错怎么修"，去 [`troubleshooting.md`](troubleshooting.md) 的**快速症状索引**（行 13–52），按现象直接查到 `Qxx`，那里有完整的排查步骤、命令与**已排除的无效尝试**。两者对应关系：
+>
+> | 本章小节 | 对应的排障条目 |
+> |---|---|
+> | §8.2 安装期高频问题 | [`Q01`–`Q04`](troubleshooting.md)（安装与依赖）、[`Q12`–`Q14`](troubleshooting.md)（CUDA 编译） |
+> | §8.3 运行期问题（Vulkan / 驱动 / GPU） | [`Q09`–`Q11`](troubleshooting.md) —— 其中 **`Q11` 是本次复现最贵的一坑（1h43min）**：Isaac Sim 5.1 要求**硬件 RT cores**，软件光追一概被拒 |
+> | §8.4 渲染异常速查 | [`Q22`–`Q26`](troubleshooting.md)（USD 资产与渲染，逐根因展开） |
+> | §8.5 性能瓶颈与实测数字 | [`Q27`–`Q29`](troubleshooting.md)（性能问题） |
+> | 本章未覆盖：容器权限 / 进程假死 / LLM 生成 DSL | [`Q05`–`Q08`](troubleshooting.md)、[`Q15`–`Q18`](troubleshooting.md)、[`Q19`–`Q21`](troubleshooting.md) |
+>
+> 每条实践记录的完整现象/排查过程/决策原因见 [`ai_knowledge.md`](ai_knowledge.md) §4（`P01`–`P18`，行 146–193）。
 
 ### 8.1 功能性限制（仓库明确声明）
 
@@ -1543,9 +1563,18 @@ V100（compute 7.0）上的故障链：`Your GPUs do not support RayTracing` →
 | 点云在合成 stage 里消失 | **嵌套 payload 会丢点云** —— 改为内联 `def Points`（实测高饱和像素占比从 0.9% 提升到 6.0%） |
 | 3DGS 物体穿透 | 纯视觉 3DGS 资产没有碰撞体 —— 需注入不可见的 box proxy |
 
+> **⚠️ 本表两条修复建议在后续实践中被修正，照抄会走弯路** —— 详见 [`troubleshooting.md`](troubleshooting.md) §七（行 425–514，`Q22`–`Q26`）：
+>
+> 1. **「物体呈单一平板色 → 写 `primvars:displayColor`」是权宜之计，不是正解。** 它整体跳过了官方资产规范要求的 UV 贴图流程（`UsdPreviewSurface` + `UsdUVTexture` + `textures/diffuse.jpg`），丢掉 texel 密度优势，采纳者事后自评为"最大耻辱"并推翻（[`ai_knowledge.md`](ai_knowledge.md) §3 · `D10`，行 140）。要对齐官方资产结构，走 [`Q26`](troubleshooting.md)。
+> 2. **「RGB 全黑 → 把 `scene_usd` 指向官方自带灯光的背景 USD」只适用于用官方场景的情形。** 自建 real2sim 场景需自己建背景层：DomeLight + 点云 + X 轴 +90° 旋转（COLMAP Y-up → Isaac Z-up）+ 不可见地面碰撞代理，见 [`Q22`](troubleshooting.md)。
+> 3. 「嵌套 payload 会丢点云」的机理已定位得更精确：**当被引用层的 `defaultPrim` 类型 ≠ 宿主 prim 类型时组合会静默失败**，改用 `references` 同样无效，`stage.Traverse()` 可确诊 —— 见 [`Q25`](troubleshooting.md)。
+> 4. 本表未列的一类：**物体完全不出现**（亚像素点宽被渲染器剔除），反算 `local_width = target_world_width / scale_factor`，见 [`Q25`](troubleshooting.md)。
+
 ### 8.5 性能瓶颈与实测数字
 
 `[实践]` / `[CODE]`
+
+> **📌 遇到具体的慢**：脚本跑 1 小时无输出 → [`Q27`](troubleshooting.md)（先降数据量再优化实现，3 小时 → 5–20 秒）；开 ROS 后变慢并超时 → [`Q28`](troubleshooting.md)；点云场景帧率极低 → [`Q29`](troubleshooting.md)（100K vs 600K 的实测取舍表）。另可补充的实测数字见 [`ai_knowledge.md`](ai_knowledge.md) §7.2（行 314）。
 
 **离线流水线**：PGSR 训练约 75 分钟（A800）；TSDF 融合约 50 分钟、每个输出 700 MB–1 GB；网格简化约 30 秒；UV 烘焙在简化后为 20–60 秒/物体（未简化时逐三角形的 Python 循环需 >1 小时；xatlas 在 >100K 三角形时不收敛；单靠 numba JIT 需 30 分钟；scipy `griddata` 需数小时）——**必须先简化到 5–10% 再向量化**。Open3D 的二次误差简化在约 165K 面处触底，改用 `fast-simplification`。3DGS 质量参考：PSNR >25 dB 可接受、>30 dB 良好。
 

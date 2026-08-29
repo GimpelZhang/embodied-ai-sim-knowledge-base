@@ -8,12 +8,20 @@
 
 ## 总表
 
-| 项目 slug | 名称 / 上游 | 开发方 | 状态 | background 文档 | 项目内索引 |
-|---|---|---|---|---|---|
-| `genie_sim_v3` | Genie Sim 3.x (`AgibotTech/genie_sim`) | 智元机器人 AgiBot | ✅ 已完成 | [`genie_sim_v3/background_knowledge.md`](genie_sim_v3/background_knowledge.md) | [`genie_sim_v3/00-index.md`](genie_sim_v3/00-index.md) |
-| `genesis_world` | Genesis World (`Genesis-Embodied-AI/genesis-world`) | Genesis Embodied AI | ⏳ 待编写 | — | — |
-| `ge_sim_v2` | GE-Sim-V2 (`AgibotTech/GE-Sim-V2`) | 智元机器人 AgiBot | ⏳ 待编写 | — | — |
-| `lw_benchhub` | LW-BenchHub (`LightwheelAI/LW-BenchHub`) | 光轮智能 Lightwheel | ⏳ 待编写 | — | — |
+| 项目 slug | 名称 / 上游 | 开发方 | 状态 | background 文档（原理层） | ai_knowledge 文档（经验层） | troubleshooting（排障层） | 项目内索引 |
+|---|---|---|---|---|---|---|---|
+| `genie_sim_v3` | Genie Sim 3.x (`AgibotTech/genie_sim`) | 智元机器人 AgiBot | ✅ 已完成 | [`genie_sim_v3/background_knowledge.md`](genie_sim_v3/background_knowledge.md) | [`genie_sim_v3/ai_knowledge.md`](genie_sim_v3/ai_knowledge.md) | [`genie_sim_v3/troubleshooting.md`](genie_sim_v3/troubleshooting.md) | [`genie_sim_v3/00-index.md`](genie_sim_v3/00-index.md) |
+| `genesis_world` | Genesis World (`Genesis-Embodied-AI/genesis-world`) | Genesis Embodied AI | ⏳ 待编写 | — | — | — | — |
+| `ge_sim_v2` | GE-Sim-V2 (`AgibotTech/GE-Sim-V2`) | 智元机器人 AgiBot | ⏳ 待编写 | — | — | — | — |
+| `lw_benchhub` | LW-BenchHub (`LightwheelAI/LW-BenchHub`) | 光轮智能 Lightwheel | ⏳ 待编写 | — | — | — | — |
+
+**三类文档的分工**（同一批事实的三个视图，按"手上有什么"选）：
+
+| 你现在的处境 | 去哪 | 层次 |
+|---|---|---|
+| **手上有一条报错 / 异常现象** | `troubleshooting.md` 顶部「快速症状索引」 | **排障层**，Q&A，`[实践]` 级 |
+| 想知道**为什么会这样、当时试错走过哪些弯路** | `ai_knowledge.md` §4（含"无效尝试"列） | **经验层**，全篇 `[实践]` 级 |
+| 查 **API / 参数 / 设计原理 / 版本能力** | `background_knowledge.md`（固定 9 章） | **原理层**，多为 `[CODE]`/`[PAPER]` 级 |
 
 ---
 
@@ -22,6 +30,8 @@
 - **开发方**：智元机器人（AgiBot / AgibotTech）
 - **版本**：v3.2.0（发布 2026-06-25），许可证 MPL-2.0
 - **background 文档**：[`genie_sim_v3/background_knowledge.md`](genie_sim_v3/background_knowledge.md)（1657 行，9 章齐备）
+- **ai_knowledge 文档**：[`genie_sim_v3/ai_knowledge.md`](genie_sim_v3/ai_knowledge.md)（372 行，复现实战复盘，`[实践]` 级）
+- **troubleshooting 文档**：[`genie_sim_v3/troubleshooting.md`](genie_sim_v3/troubleshooting.md)（600 行，`Q01`–`Q29` FAQ，按现象检索，`[实践]` 级）
 - **项目内索引**：[`genie_sim_v3/00-index.md`](genie_sim_v3/00-index.md) ← **先读这个拿行号**
 
 **简短总结**
@@ -29,6 +39,9 @@
 
 **关键标签**
 `物理仿真` `OpenUSD` `IsaacSim` `ROS2集成` `评测基准` `数据采集` `VLA闭环` `传感器仿真` `强化学习训练` `Real2Sim-3DGS` `遥操作` `容器化部署` `Headless渲染` `运动规划-cuRobo`
+
+**复现经验摘要**（详见 `ai_knowledge.md`）
+一次五阶段实战（环境搭建 → LLM 场景生成 → 3DGS 重建 → USD 物理注入 → 资产规范化）的三条最高价值结论：① **Isaac Sim 5.1 要求硬件 RT cores（Compute Capability ≥ 7.5）**，V100 的 7.0 会导致渲染器静默失败、benchmark 永久挂起，软件光追不被接受；② **CUDA 架构错配会伪装成显存问题**（极小张量报 OOM、请求 56 GiB），换卡后必须重编译所有 CUDA 扩展；③ **"日志在刷 ≠ 任务在跑"**，需用 GPU 利用率、端口 ESTABLISHED、日志明确标记等独立判据。另有 18 条带"无效尝试"记录的问题条目可直接用于排障；已改写为 [`troubleshooting.md`](genie_sim_v3/troubleshooting.md) 的 29 条 Q&A，**带报错就直接查那里的「快速症状索引」**。
 
 **本机相关资源**（均已 gitignore，仅本地有效）
 - 源料清单：`sources/genie_sim_v3/background.txt`（上游仓库 + arXiv:2601.02078 + 官方文档站）
