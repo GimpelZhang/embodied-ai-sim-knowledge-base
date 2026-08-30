@@ -1,40 +1,71 @@
 # 具身智能仿真工具链知识库 · 总索引
 
-> 更新日期：2026-08-29
+> 更新日期：2026-08-30
 > 本知识库用途：作为 **Claude Code 的常驻参考层**，服务两类任务——
 > 1. **复现**：从零部署某个具身智能仿真工具链（装环境、跑通闭环、排障）
 > 2. **使用**：在已复现的工具链上完成新的仿真测试任务（评测、采数、场景生成、RL 训练）
+>
+> 知识分两层：**[全局层 `knowledge/global/`](global/00-index.md)** 是跨项目综合（通用流程 / 问题分类 / 选型 / 最佳实践 / 术语），**项目层 `knowledge/projects/<项目>/`** 是单项目五层文档。**有对应项目就直接进项目层；面对本库还没有的新工具链，全局层是唯一入口。**
+
+---
+
+## 全局层速览（跨项目，不针对某一个工具链）
+
+入口：[`global/00-index.md`](global/00-index.md)。五篇共 2211 行，是四个项目五层文档（约 12 000 行）的横向提炼。**它是派生层，不新增事实；与项目层冲突时以被引用的那一层为准。**
+
+| 文档 | 行数 | 什么时候读它 |
+|---|---|---|
+| ⭐⭐ [`common_reproduction_guide.md`](global/common_reproduction_guide.md) | 539 | **要复现一个本库还没有的新工具链** —— 准备 / 安装 / 运行调试 / 调优 / 验收 / 记录六阶段；先读 §0 三条 + §7 一页动作序列 |
+| ⭐⭐ [`common_issues_solutions.md`](global/common_issues_solutions.md) | 759 | **有报错但项目层症状索引查不到** —— A–M 共 13 类；先读 §N 定位顺序。⚠️ 两节最高价值：**§I 改了没生效**、**§J 假阳性与假阴性** |
+| ⭐ [`toolchain_comparison.md`](global/toolchain_comparison.md) | 282 | **选型 / 判断某个栈能不能干这件事** —— 必先读开头「⚠️ 这 4 个不是同类产品」；§5 是**反向选型**（这 4 个都不合适的情况） |
+| ⭐ [`best_practices.md`](global/best_practices.md) | 390 | **开工前立规矩 / 复盘对照 / 给 Agent 写执行协议** —— 32 条教训按 8 主题重组，🔁 标记表示有几个项目**独立**得出同一条 |
+| [`terminology_mapping.md`](global/terminology_mapping.md) | 241 | **词义不确定**，尤其时间频率与关节控制 —— §0 九组易混概念、§9 同名不同义警告表 |
+
+**三条最高频的全局层用法：**
+
+1. **「跑出 0 分 / 成功率不合理」⛔ 先别改模型** → [`best_practices.md` §5.3 审计四件套](global/best_practices.md)（回退计数 / 动作非退化 / 帧数对账 / 输入侧量纲）。本库最贵的一次错判就是把管道故障读成了模型能力。
+2. **「我改了代码或配置，但完全没生效」** → [`common_issues_solutions.md` §I](global/common_issues_solutions.md) + [`best_practices.md` §4](global/best_practices.md)。这是本领域头号失败形态：**静默无效**，不报错。
+3. **「想降低目标 / 放宽判定口径」** → [`best_practices.md` §6.2](global/best_practices.md)：必须先把「原目标不可达」证明到机制层面并显式征得同意。反面教材是放宽口径制造假阳性。
 
 ---
 
 ## 给 Claude Code 的使用约定（先读这一节）
 
-**检索顺序（三级索引，逐层收窄，不要一上来就读正文）：**
+**检索顺序（逐层收窄，不要一上来就读正文）：**
 
 ```
-knowledge/00-index.md            ← 你在这里。判断"该查哪个项目"
-        ↓
-knowledge/projects/00-index.md   ← 项目花名册 + 标签 + 选型对照表
-        ↓
-knowledge/projects/<项目>/00-index.md   ← 章节地图，定位到具体小节
-        ↓
-        ├── quickstart.md             ← 【速查层】⭐ 要动手就先读这个：最短路径 + 自检清单
-        ├── background_knowledge.md   ← 【原理层】是什么、怎么设计、API 与限制
-        ├── ai_knowledge.md           ← 【经验层】实战踩坑、决策复盘、可复用教训
-        ├── troubleshooting.md        ← 【排障层】按报错现象查的 Q&A（带报错时最快路径）
-        └── code_knowledge.md         ← 【代码层】代码在哪、怎么启动、改哪个文件、硬编码陷阱
-              后四者都只读需要的那几十行；quickstart 可整篇读（约 385 行）
+knowledge/00-index.md            ← 你在这里。判断「查全局层还是某个项目」
+        │
+        ├── 新工具链 / 通用问题 / 选型 / 术语
+        │       ↓
+        │   knowledge/global/00-index.md      ← 全局层索引（5 篇跨项目文档 + 行号表）
+        │
+        └── 已锁定某个已收录项目
+                ↓
+            knowledge/projects/00-index.md   ← 项目花名册 + 标签 + 选型对照表
+                ↓
+            knowledge/projects/<项目>/00-index.md   ← 章节地图，定位到具体小节
+                ↓
+                ├── quickstart.md             ← 【速查层】⭐ 要动手就先读这个：最短路径 + 自检清单
+                ├── background_knowledge.md   ← 【原理层】是什么、怎么设计、API 与限制
+                ├── ai_knowledge.md           ← 【经验层】实战踩坑、决策复盘、可复用教训
+                ├── troubleshooting.md        ← 【排障层】按报错现象查的 Q&A（带报错时最快路径）
+                └── code_knowledge.md         ← 【代码层】代码在哪、怎么启动、改哪个文件、硬编码陷阱
+                      后四者都只读需要的那几十行；quickstart 可整篇读（约 385 行）
 ```
 
 **先选对文档层次**（这一步选错会浪费很多时间）：
 
 | 我的问题是 | 查哪层 |
 |---|---|
-| **我手上有一条具体报错 / 日志异常，现在怎么办？** | **排障层** `troubleshooting.md` —— 直接看顶部「快速症状索引」，按现象查到 `Qxx`。**带报错时这是最快路径，优先于经验层。** |
+| **我要复现的工具链本库还没收录** | 🌐 **全局层** [`global/common_reproduction_guide.md`](global/common_reproduction_guide.md) —— 六阶段通用流程；配合 [`best_practices.md`](global/best_practices.md) 立纪律、[`common_issues_solutions.md`](global/common_issues_solutions.md) 预判坑的形状 |
+| **我手上有一条具体报错 / 日志异常，现在怎么办？** | **排障层** `troubleshooting.md` —— 直接看顶部「快速症状索引」，按现象查到 `Qxx`。**带报错时这是最快路径，优先于经验层。** 查不到再回 🌐 [`global/common_issues_solutions.md`](global/common_issues_solutions.md) 按类别定位 |
 | **我要动代码 / 要跑起来 / 找某个类或参数在哪个文件？** | **代码层** `code_knowledge.md` —— §2 入口点与完整命令、§3 核心模块、§4 配置系统、§7 硬编码陷阱 |
 | 这个报错**为什么**会这样？当时试过哪些无效方法？ | **经验层** `ai_knowledge.md` §4（问题表含"无效尝试"列，可直接排除错误路径） |
 | 这个仿真器怎么设计的？有什么 API / 配置项 / 能力边界？ | **原理层** `background_knowledge.md` |
-| 复现这东西大概要多久、会踩几个坑、哪些决策容易做错？ | **经验层** §2 时间线 + §3 决策表 + §6 教训 |
+| 复现这东西大概要多久、会踩几个坑、哪些决策容易做错？ | **经验层** §2 时间线 + §3 决策表 + §6 教训；跨项目汇总见 🌐 [`global/best_practices.md`](global/best_practices.md) |
+| **该用哪个工具链？这个栈能不能干这件事？** | 🌐 **全局层** [`global/toolchain_comparison.md`](global/toolchain_comparison.md) —— 对比矩阵 + 选型建议 + 适用边界 + **反向选型**；细节再回项目层原理层 §4/§8 |
+| **这个词在这个工具链里到底指什么？** | 🌐 **全局层** [`global/terminology_mapping.md`](global/terminology_mapping.md) —— §0 九组易混、§9 同名不同义 |
 
 > 排障层与经验层是**同一批事实的两个视图**（`Qxx` ↔ `Pxx` 一一对应），不是互相补充 —— 不必两边都读。
 > **代码层是独立视角**：它描述**具体某个复现仓库的代码实体**（不是上游本体），并为排障层的现象提供 `[CODE]` 级机制解释。四层的关联映射见各项目 `code_knowledge.md` §8。
@@ -58,10 +89,18 @@ knowledge/projects/<项目>/00-index.md   ← 章节地图，定位到具体小�
 simulation-knowledge/
 ├── knowledge/                       ← ✅ 唯一纳入 git 跟踪的知识层
 │   ├── 00-index.md                  ← 总索引（本文件）
+│   ├── global/                      ← 🌐 全局层：跨项目综合，不针对某一个工具链
+│   │   ├── 00-index.md              ← 全局层索引（含五篇的行号表 + 思维导图）
+│   │   ├── common_reproduction_guide.md   ← 通用复现流程（六阶段）
+│   │   ├── common_issues_solutions.md     ← 问题分类与解决方案库（A–M）
+│   │   ├── toolchain_comparison.md        ← 横向对比与选型指南
+│   │   ├── best_practices.md              ← 最佳实践 32 条（按主题）
+│   │   └── terminology_mapping.md         ← 跨工具链术语对照表
 │   └── projects/
 │       ├── 00-index.md              ← 项目花名册
 │       └── <project_slug>/
-│           ├── 00-index.md          ← 项目内章节地图（四篇文档都在这里定位行号）
+│           ├── 00-index.md          ← 项目内章节地图（五篇文档都在这里定位行号）
+│           ├── quickstart.md             ← 速查层（派生自其余四层，不含新事实）
 │           ├── background_knowledge.md   ← 原理层主文档（固定 9 章结构）
 │           ├── ai_knowledge.md           ← 经验层文档（复现实战复盘，可选）
 │           ├── troubleshooting.md        ← 排障层文档（由经验层 §4 改写为 Q&A，可选）
@@ -78,6 +117,7 @@ simulation-knowledge/
 - `00-index.md` 前缀 `00-` 保证在任何目录列表中排最前，便于第一眼命中。
 - 项目 slug 与 `sources/` 下的目录名保持一致，便于双向跳转。
 - `background_knowledge.md` 必须固定为 9 章：项目概述 / 核心原理 / 架构与模块 / 关键特性 / 安装与依赖 / 基本使用流程 / 常用 API 接口 / 已知问题与限制 / 参考资源。章号稳定 ⇒ 跨项目可用同一套定位习惯。
+- **`global/` 是派生层，不新增事实**：每条结论必须能回指到某个项目的 `Pxx`/`Dxx`/`Lxx`/`Qxx` 或原理层章节。**新增项目后必须回灌全局层**（对比表加列、🔁 重复度重算、教训溯源表加行），清单见 [`global/00-index.md`](global/00-index.md) §6。
 - `sources/` 与 `*_tour/` 不入库，**索引里引用它们的路径仅在本机有效**；换机器需重新 clone。
 
 ---
@@ -99,6 +139,11 @@ simulation-knowledge/
 
 | 我要做的事 | 建议路径 |
 |---|---|
+| 🌐 **复现一个本库还没收录的新工具链** | ⭐⭐ [`global/common_reproduction_guide.md`](global/common_reproduction_guide.md) §0 三条 + §7 一页动作序列 → 再按阶段读 §1–§6。开跑前先过 [`global/best_practices.md`](global/best_practices.md) §0「如果只记 5 条」 |
+| 🌐 **报错在项目层症状索引里查不到** | [`global/common_issues_solutions.md`](global/common_issues_solutions.md) §N 定位顺序 → A–M 十三类。⚠️ 四类被标记 **🔁 4/4**（四个项目全都撞过）：F 源码契约漂移、H 进程稳定性、**I 改了没生效**、**J 假阳性/假阴性** |
+| 🌐 **跑出 0 分 / 分数不合理，想改模型或超参** | ⛔ **先别改** → [`global/best_practices.md`](global/best_practices.md) §5.3 **审计四件套**（回退计数 / 动作非退化 / 帧数对账 / 输入侧量纲）。本库最贵的一次错判是把管道故障读成了模型能力 |
+| 🌐 **想放宽判定口径 / 降低目标** | [`global/best_practices.md`](global/best_practices.md) §6.2 —— 必须先把「原目标不可达」证明到机制层面并显式征得同意；反面教材是放宽口径制造假阳性 |
+| 🌐 **一个词不确定在这个栈里指什么** | [`global/terminology_mapping.md`](global/terminology_mapping.md) §0 九组易混（物理步长秒 vs Hz、`substeps` vs `decimation`、`set_` vs `control_dofs_position`…）+ §9 同名不同义警告表 |
 | **手上有一条报错，先判断是不是已知坑** | ⭐ **`troubleshooting.md` 顶部「快速症状索引」** —— 按现象直接查到 `Qxx`（genie_sim_v3 有 **29** 条；lw_benchhub 有 **38** 条；**genesis_world 有 37 条，分 A–H 八类**；**ge_sim_v2 有 41 条，分 A–E 五类**。索引栏写的都是**逐字报错原文**，可直接 `Ctrl-F`） |
 | **把某个已复现的工具链跑起来（完整命令）** | ⭐⭐ **先看 `quickstart.md`**（**四个项目均已具备**）—— 最短路径 + 自检清单；不够细再进 **`code_knowledge.md` §2「入口点与运行方式」**（容器启动、逐条 `docker exec`、环境变量总表）。**genesis_world 的入口总表列出 14 个脚本及其「必须的工作目录」——走错目录会找不到相对路径产物** |
 | **改代码 / 加新任务 / 改配置项** | ⭐ **`code_knowledge.md` §3 核心模块 + §4 配置系统**（含"注册新任务必改的 6 处"） |
@@ -121,7 +166,7 @@ simulation-knowledge/
 | **命中"某能力到底有没有"的反复搜索** | 各项目 `00-index.md` 末尾的 **`未提及` / `未找到` 清单** —— 已 grep 确认无证据的方向，**命中就别再搜了** |
 | 做 sim2real 或 Real2Sim(3DGS) | 第 2 章渲染 + 第 6 章对应流程 + 第 8 章缺口清单；**实战全流程与踩坑见 `ai_knowledge.md` §2.2 + §4.5** |
 | **评估复现工作量 / 避免重复踩坑** | `ai_knowledge.md` §2（时间线与计划变更点）+ §3（决策表）+ §6（8 条可复用教训） |
-| 跨工具链选型 | [`projects/00-index.md`](projects/00-index.md) 的「选型对照表」 |
+| 跨工具链选型 | 🌐 [`global/toolchain_comparison.md`](global/toolchain_comparison.md)（对比矩阵 / 选型建议 / 适用边界 / 反向选型）＋ [`projects/00-index.md`](projects/00-index.md) 的「选型对照表」 |
 | **想用世界模型（GE-Sim 2.0）替代物理仿真做闭环评测** | ⚠️ 先读 `ge_sim_v2/background_knowledge.md` **§1.4 适用/不适用表**与 **§8.3 能力边界表** —— 它只回答"策略看起来会怎么动"，**不回答"物理上会不会成功"**；再看 **§8.4 交付落差** —— **开箱即用 `reward`/`progress` 恒为 `None`**（World Judge 未开源），"自带奖励"这一核心卖点要自己补 |
 | **要引用 GE-Sim 2.0 的性能 / 榜单数字** | ⭐ **必读 `ge_sim_v2/background_knowledge.md` §8.2 五条证据矛盾** —— "100 帧/2.3 秒"实为 25 帧 × 4× 跳帧的**覆盖跨度**；"可做 RL"只见于公众号（论文列为未来工作）；"登顶 WorldArena"指活榜，且**基准论文正文 grep `GE-Sim` 命中 0**、其作者自述该分数与动作规划仅 **r=0.36** 弱相关 |
 | **部署 GE-Sim 2.0 时撞到报错** | ⭐ **`ge_sim_v2/troubleshooting.md` 快速症状索引（41 条 / A–E 五类）** —— A 网络下载、B 安装依赖、C 源码契约、D 进程资源、E 正确性与假阴性。三条最高频：**`Q09` 四个加速内核开关首次部署应全关**（`spas_sage_attn` 不在 PyPI）、**`Q11` numpy 会被重装需再锁回**、**`Q17` `WorldModelEnv` 不是 gym 接口**（四条 gym 习惯全落空） |
@@ -133,6 +178,14 @@ simulation-knowledge/
 
 ## 知识库现状
 
+- **🌐 全局层（跨项目综合）已建成**：**5 篇 / 2211 行**，入口 [`global/00-index.md`](global/00-index.md)
+  - [`common_reproduction_guide.md`](global/common_reproduction_guide.md) 539 行（六阶段 + §7 一页动作序列）
+  - [`common_issues_solutions.md`](global/common_issues_solutions.md) 759 行（A–M 十三类 + §0 重复问题榜 + §N 定位顺序；F/H/I/J 四类标记 🔁 4/4）
+  - [`toolchain_comparison.md`](global/toolchain_comparison.md) 282 行（9 维对比矩阵 + 选型建议 + 逐项目适用边界 + §5 反向选型）
+  - [`best_practices.md`](global/best_practices.md) 390 行（32 条教训按 8 主题重组，🔁 标注收敛度；§9 溯源索引 32 行）
+  - [`terminology_mapping.md`](global/terminology_mapping.md) 241 行（按概念族 10 节；§0 九组易混 + §9 同名不同义 10 组）
+  - ⚠️ **派生层，不新增事实**；**新增项目后必须回灌**（对比表加列、🔁 重复度重算、教训溯源表加行、检查是否产生新的同名不同义），清单见 [`global/00-index.md`](global/00-index.md) §6
+  - **两条 4/4 全部项目独立收敛的教训**：① **任何写进代码或配置的名字，落笔前必须 grep 到它的定义处或读取处**；② **最贵的失败都不报错** —— 本领域的典型失败形态是静默行为错，不是崩溃
 - **已完成（五层齐备）**：**4 个项目**
   - **genie_sim_v3** —— 原理层 1694 行（9 章齐备，含传感器仿真深挖）＋ 经验层 393 行（五阶段复现复盘，18 个问题条目 / 10 个决策 / 8 条教训）＋ 排障层 605 行（`Q01`–`Q29` FAQ，按现象检索）＋ **代码层 1251 行**（对应复现仓库 `genie_sim_v3_tour`，8 章：结构 / 入口 / 核心模块 / 配置 / 依赖 / 修改点 / 注意事项 / 四层关联）＋ **速查层 385 行**
   - **lw_benchhub** —— 原理层 1478 行（9 章齐备，含 §2.6 传感器仿真 13 小节、§4.2 规模数字实测校准、§8.3 十六项已验证代码缺陷、§8.7 未找到清单）＋ 经验层 432 行（`P01`–`P38` / `D01`–`D18` / `L01`–`L08`）＋ 排障层 864 行（`Q01`–`Q38`，5 组，带快速症状索引与贡献指南）＋ **代码层 952 行**（对应复现仓库 `lw_benchhub_tour`；`[CODE]`×72 / `[实践]`×15 / `[推断]`×8；含 **11 处 monkey patch 全表**（上游 10 + 本地新增 1）、**两份 vendored IsaacLab 的判别法**、**11 条静默失效路径**、22 行 `Qxx`→机制映射）＋ **速查层 403 行**（3 个带预期输出的运行示例）
@@ -143,4 +196,4 @@ simulation-knowledge/
     **代码层 708 行**（对应复现仓库 `GE-Sim-V2-tour`，8 章；描述对象是**薄编排层**约 8.8 k 行、**零模型代码**，上游 `gesim` 子模块只改一行；含 **13 条静默失效路径**、**≥5 组重复定义常量**、三个隔离 conda 环境与**逐 Stage 相反的代理策略**、§8 五张跨层映射表）＋ **速查层 312 行**（5 个 Stage 的运行示例 + 把 `L01` 审计拆成 4 条可直接粘的命令 + 6 条交付口径检查）。五层交叉引用已闭环。
     ⚠️ **代码层最反常的一条**：教训 `L06`（常量必须单点定义）**在产出这条教训的同一个仓库里被违反了至少四次** —— 本知识库少见的「教训与反例同时留档」，见 `code_knowledge.md` §8.2。
     ⚠️ **两处已就地标注的跨层冲突**：① 原理层 §5.4 建议「四个加速内核全关」，实测只关了 `sparge_attention` 一个也能全程跑通（以代码层 §6.1 为准）；② 两套 16 维布局转换请用上游 `wm_state_to_policy_state()`，**不要**照抄本仓库手写的两份重排（以原理层 §7.2 为准）。
-- **下一步建议**：四个项目均已五层齐备。新增项目时按 `CLAUDE.md` 的写入约定推进，每篇完成后同步更新本文件、`projects/00-index.md` 与该项目 `00-index.md` 三处
+- **下一步建议**：四个项目均已五层齐备，全局层五篇已建成。新增项目时按 `CLAUDE.md` 的写入约定推进，每篇完成后同步更新本文件、`projects/00-index.md` 与该项目 `00-index.md` 三处；**项目五层齐备后，还要按 [`global/00-index.md`](global/00-index.md) §6 的清单回灌全局层**

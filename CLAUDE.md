@@ -11,31 +11,57 @@
 
 **入口固定**：[`knowledge/00-index.md`](knowledge/00-index.md)
 
+知识分**两层**：🌐 **全局层**（跨项目综合，回答"任何工具链都会遇到什么"）＋ **项目层**（单项目五层文档）。
+
 ```
-knowledge/00-index.md                        判断该查哪个项目
-    ↓
-knowledge/projects/00-index.md               项目花名册 / 标签 / 选型对照表
-    ↓
-knowledge/projects/<项目>/00-index.md        章节地图（带行号）+ 未提及清单
-    ↓
-    ├── quickstart.md             【速查层】⭐ 动手前先读：最短路径 + 常见问题 + 自检清单
-    ├── background_knowledge.md   【原理层】是什么、怎么设计、API 与限制（固定 9 章）
-    ├── ai_knowledge.md           【经验层】实战踩坑、决策复盘、可复用教训（固定 8 章）
-    ├── troubleshooting.md        【排障层】按报错现象查的 Q&A
-    └── code_knowledge.md         【代码层】代码在哪、怎么启动、改哪个文件（固定 8 章）
-          后四者都用 offset/limit 只读那几十行；quickstart 篇幅小，可整篇读
+knowledge/00-index.md                        判断该查全局层还是某个项目
+    │
+    ├─ 🌐 新工具链 / 通用报错 / 选型 / 术语 / 立纪律
+    │      ↓
+    │  knowledge/global/00-index.md          全局层索引（5 篇的行号表 + 思维导图）
+    │      ├── common_reproduction_guide.md  通用复现流程（准备/安装/调试/调优/验收/记录，539 行）
+    │      ├── common_issues_solutions.md    问题分类与解法（A–M 十三类，759 行）
+    │      ├── toolchain_comparison.md       横向对比与选型（含反向选型，282 行）
+    │      ├── best_practices.md             最佳实践 32 条（🔁 标收敛度，390 行）
+    │      └── terminology_mapping.md        术语对照表（同名不同义，241 行）
+    │
+    └─ 已锁定某个已收录项目
+           ↓
+       knowledge/projects/00-index.md        项目花名册 / 标签 / 选型对照表
+           ↓
+       knowledge/projects/<项目>/00-index.md 章节地图（带行号）+ 未提及清单
+           ↓
+           ├── quickstart.md             【速查层】⭐ 动手前先读：最短路径 + 常见问题 + 自检清单
+           ├── background_knowledge.md   【原理层】是什么、怎么设计、API 与限制（固定 9 章）
+           ├── ai_knowledge.md           【经验层】实战踩坑、决策复盘、可复用教训（固定 8 章）
+           ├── troubleshooting.md        【排障层】按报错现象查的 Q&A
+           └── code_knowledge.md         【代码层】代码在哪、怎么启动、改哪个文件（固定 8 章）
+                 后四者都用 offset/limit 只读那几十行；quickstart 篇幅小，可整篇读
 ```
+
+**全局层 vs 项目层，四条优先级：**
+1. **有对应项目文档就优先项目层**（粒度更细）；**本库没收录的新工具链，全局层是唯一入口**。
+2. **带逐字报错原文时先项目层 `troubleshooting.md` 的症状索引**（可 `Ctrl-F` 原文）；查不到再回全局层 `common_issues_solutions.md` 按类别定位。
+3. **全局层是派生层，不新增事实** —— 每条结论都能回指到某项目的 `Pxx`/`Dxx`/`Lxx`/`Qxx`。**冲突时以被引用的那一层为准。**
+4. **新增项目五层齐备后必须回灌全局层**（对比表加列、🔁 重复度重算、教训溯源表加行、检查新的同名不同义），清单见 `knowledge/global/00-index.md` §6。
 
 **先选对文档层次**（选错最浪费时间）：
 
 | 手上有什么 | 去哪 |
 |---|---|
 | **要动手跑 / 想不起命令怎么敲** | ⭐ **`quickstart.md`**（若该项目有）→ 环境准备、2–3 个运行示例、改参数、常见代码问题、自检清单。**它是从其余四层提炼的最短路径，先读它再往下钻。** |
-| **一条具体报错 / 日志异常** | **`troubleshooting.md` 顶部「快速症状索引」** → 按现象查到 `Qxx`。**带报错时这是最快路径，优先于经验层。** |
+| **一条具体报错 / 日志异常** | **`troubleshooting.md` 顶部「快速症状索引」** → 按现象查到 `Qxx`。**带报错时这是最快路径，优先于经验层。** 查不到再去 🌐 `global/common_issues_solutions.md` §N |
 | **要改代码 / 找某个类、函数、参数在哪个文件** | **`code_knowledge.md`** → §2 入口点与完整命令、§3 核心模块、§4 配置系统、§7 硬编码陷阱 |
 | 想知道**为什么会这样、试过哪些无效方法** | `ai_knowledge.md` §4 问题表（含"无效尝试"列） |
 | 查 API / 参数 / 设计原理 / 能力边界 | `background_knowledge.md` |
 | 估工作量、避免重复踩坑 | `ai_knowledge.md` §2 时间线 + §3 决策表 + §6 教训 |
+| 🌐 **要复现的工具链本库还没收录** | **`global/common_reproduction_guide.md`** §0 三条 + §7 一页动作序列，再按阶段读 §1–§6 |
+| 🌐 **该用哪个工具链 / 这个栈能不能干这件事** | **`global/toolchain_comparison.md`** —— ⚠️ 必先读开头「这 4 个不是同类产品」；§5 是**反向选型**（都不合适的情况） |
+| 🌐 **开工前立规矩 / 复盘对照 / 给 Agent 写执行协议** | **`global/best_practices.md`** §0「如果只记 5 条」；🔁 标记 = 有几个项目**独立**得出同一条 |
+| 🌐 **一个词不确定在这个栈里指什么** | **`global/terminology_mapping.md`** §0 九组易混 + §9 同名不同义警告表 |
+| 🌐 **跑出 0 分 / 分数不合理** | ⛔ **先别改模型** → **`global/best_practices.md`** §5.3 **审计四件套**（回退计数 / 动作非退化 / 帧数对账 / 输入侧量纲） |
+| 🌐 **"改了没生效"** | **`global/common_issues_solutions.md`** §I ＋ **`global/best_practices.md`** §4 —— 本领域头号失败形态是**静默无效**，不报错 |
+| 🌐 **想放宽判定口径 / 降低目标** | **`global/best_practices.md`** §6.2 —— 必须先把「原目标不可达」证明到机制层面并显式征得同意 |
 
 排障层与经验层是**同一批事实的两个视图**（`Qxx` ↔ `Pxx` 一一对应），不必两边都读。
 **代码层是独立视角**：它描述**本机复现仓库 `<project>_tour` 的代码实体**（不是上游本体），并为排障层的现象提供 `[CODE]` 级机制解释；四层的关联映射见 `code_knowledge.md` §8。
@@ -83,6 +109,8 @@ knowledge/projects/<项目>/00-index.md        章节地图（带行号）+ 未�
 | 每条结论带证据标注 | `[CODE]` 附仓库相对路径（必要时带行号）。经验层/排障层全篇 `[实践]`，须在文档头声明"不是官方结论"。 |
 | 分批写入 | 每次约 100–200 行，避免单次超长写入失败。用哨兵注释（如 `<!-- CHUNK_MARKER -->`）追加，最后一批删除哨兵。 |
 | 三处索引同步更新 | 完成/修改一篇文档后，同步 `knowledge/00-index.md` 的花名册表与「常见任务」路由、`knowledge/projects/00-index.md` 的总表与项目条目（含摘要）、以及该项目 `00-index.md` 的行号表与章节地图。**新增文档类型时还要更新本文件的检索协议。** |
+| 🌐 全局层是派生层 | **仅 `knowledge/global/**`**：不新增事实，每条结论必须能回指到某项目的 `Pxx`/`Dxx`/`Lxx`/`Qxx` 或原理层章节。改动后同步 `knowledge/global/00-index.md` 的行号表、`knowledge/00-index.md` 的全局层小节、本文件的检索协议。 |
+| 🌐 新项目必须回灌全局层 | 某项目五层齐备后，按 `knowledge/global/00-index.md` §6 的清单逐项检查：① `toolchain_comparison.md` 加一列 + §4 加一节；② `common_issues_solutions.md` 的 🔁 重复度重算；③ `best_practices.md` §9 溯源表加行 + 🔁 重算；④ `terminology_mapping.md` §9 检查是否产生新的同名不同义；⑤ `common_reproduction_guide.md` 仅在出现**新类型的阶段性坑**时才改。**🔁 的分母是当前已收录项目数（现为 4），加项目时已有标记必须重新核对，不能只加不改。** |
 | 标签复用词表 | 见 `knowledge/projects/00-index.md` 末尾的标签词表，**勿造同义词**。 |
 
 ---
@@ -94,6 +122,13 @@ simulation-knowledge/
 ├── CLAUDE.md                  ← 本文件
 ├── knowledge/                 ← ✅ 唯一纳入 git 跟踪的知识层
 │   ├── 00-index.md
+│   ├── global/                ← 🌐 全局层：跨项目综合（派生自各项目五层，不含新事实）
+│   │   ├── 00-index.md                  ← 全局层索引（行号表 + 思维导图 + 回灌清单）
+│   │   ├── common_reproduction_guide.md ← 通用复现流程（六阶段）
+│   │   ├── common_issues_solutions.md   ← 问题分类与解决方案库（A–M）
+│   │   ├── toolchain_comparison.md      ← 横向对比与选型指南
+│   │   ├── best_practices.md            ← 最佳实践 32 条（按主题）
+│   │   └── terminology_mapping.md       ← 跨工具链术语对照表
 │   └── projects/
 │       ├── 00-index.md
 │       └── <project_slug>/
