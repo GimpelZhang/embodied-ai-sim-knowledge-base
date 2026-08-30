@@ -308,7 +308,7 @@ b       ← 0.9·b + 0.1·R                      # EMA baseline
 
 ### 3.6 `scripts/stage5_adapter.py`（659 行）— 反向 WebSocket 隧道 agent
 
-**最大的单文件**。RoboColiseum 评测平台的模型是"平台主动向你的 agent 推观测"，所以本地要跑一个**反向隧道客户端**：连上网关、接收二进制帧、解出观测、问本地策略服务、把动作打包回去。
+**本层已枚举的脚本里行数最多的一个**（659 行 `[CODE]`；⚠️ 源料并未把"全仓最大单文件"写成结论，只记了各文件行数与"Stage 5 那次提交共 10 文件 1856 行"，故此处只作枚举范围内的比较）。RoboColiseum 评测平台的模型是"平台主动向你的 agent 推观测"，所以本地要跑一个**反向隧道客户端**：连上网关、接收二进制帧、解出观测、问本地策略服务、把动作打包回去。
 
 | 元素 | 位置 | 说明 |
 |---|---|---|
@@ -332,6 +332,22 @@ b       ← 0.9·b + 0.1·R                      # EMA baseline
 - **腰部关节是文档化的 no-op**（`:191–193`）：`g01op` 模型没有 waist 输出，于是把**当前观测到的 waist 值原样 tile 满整个 chunk**。注释直说这是 "documented no-op"。这类"填了值但没有信息"的字段**极易被误读成模型在控腰**。
 
 配套的 `scripts/stage5_policy_client.py`（75 行）只有一个 `Stage5PolicyClient`（`:34`，默认 `127.0.0.1:8000`），其 docstring `:15` 再次强调 **`prompt` 是透传、绝无硬编码回落**（坑 V）——同一条纪律在三个文件里各写了一遍。
+
+#### 3.6.1 线路层参数：**本仓库是这套协议的唯一成文来源**
+
+⚠️ 平台侧的 SKILL 文档**只描述 JSON-RPC 语义，对二进制分帧布局是 `未提及` 的**（见原理层 §9.3.3）。也就是说 `encode_data_frame` / `decode_data_frame` 那套 `[uint32 BE len][session_id][msgpack_numpy payload]` 布局，**在本知识库内只有这份代码可作依据**；换平台版本前必须重新对齐。`[CODE]`
+
+| 参数 | 取值 | 为什么是这个值 |
+|---|---|---|
+| 隧道 URL | `ws://<GATEWAY_IP>/api/challenge/tunnel?job=<job_uuid>&agent=<agent_id>` | 网关 IP 与网站域名**不是同一个**，不可互换（原理层 §9.3.2） |
+| 鉴权头 | `Authorization: Bearer <job_token>` | 双层令牌：`CHALLENGE_TOKEN`（JWT，会过期）换出**按 job 发放且不过期**的 `JOB_TOKEN` |
+| `ping_interval` / `ping_timeout` | 20 s / 10 s | 长连接保活；平台侧断线重派有 ~30 s 窗口 |
+| `max_size` | `None` | 观测帧带三路图像，默认 1 MB 上限会直接把帧丢掉 |
+| 重连 | ≤ 5 次，退避 0.5 s → 30 s | 耗尽抛 `TunnelExhausted`（`:406`） |
+| **收到 `drain` 之后不再重连** | 硬规则 | `drain` 是平台宣布本 job 收尾；此后重连会被判成异常连接（坑 S5-2 / `Q38`） |
+| 每个 job 挂 2 个 agent | 实测配置 | 平台按 `agent_id` 分派 session；**网关卡死时必须换一个新的 `agent_id` 才会被重新分派**（`P34` / `Q34`） |
+
+> ⚠️ **一处与官方指引相反的取舍** `[实践]`：官方建议"一个进程独占一张 GPU"，本次却让 **4 个 agent 共享同一个 ~10 GB 的策略服务**（省显存、也让 4 条隧道天然共用一份权重）。本次没出问题，但它是**刻意的偏离**，不是照文档做的结果。同一节的 `proxy=None`（`:437–439`）也是这样一条"本地经验覆盖默认行为"的决定——正是它让 Stage 5 免于代理干扰，而 Stage 5b 换用官方 agent 时因为没有这一手而踩了代理坑（`P34` 家族）。
 
 ### 3.7 报告 / 自检家族（11 个文件，~1900 行）
 
@@ -516,6 +532,10 @@ R2E2R 是**普通 clone（不是 submodule）**，放在 `<path>/Real2Edit2Real`
 | `SIGALRM` 硬超时 + 重试 | 即便如此，ARK API 仍可能挂死，所以额外加一层信号超时 |
 | API key 改为读环境变量 | `preprocess_demo.py` 原本是硬编码占位符 → 改成 `os.environ.get("ARK_API_KEY", "")` |
 
+> **patch 的实际效果** `[实践]`：改完之后 **12 次 inpaint 调用全部一次成功、零重试**。四个原始缺陷里，真正的"根因级"修复是 **`b64_json`** —— 它把 CDN 这个外部依赖**整条移除**，而不是给它加重试。凡是能把不可靠依赖去掉的改法，都优于把它包在重试里。
+>
+> patch 本身**幂等**：靠一个 `doubao-seedream` 标记判断是否已应用，重复 `apply` 不会二次改写。
+
 #### 6.2.2 `r2e2r-video-render-oom-fix.patch`（93 行）— 视频渲染 OOM 修复
 
 改 `videogen/scripts/infer_action_depth_canny_cosmos2_multigpu.py`，四个 hunk `[CODE]`：
@@ -528,6 +548,15 @@ R2E2R 是**普通 clone（不是 submodule）**，放在 `<path>/Real2Edit2Real`
 | `@@ -551` | 每个 clip 结束后再清一次，防止 RSS **单调增长**（原本在第 6 个 clip 被 OOM-kill） |
 
 > 注释里有一条值得单独记住的 CPython 细节：**`locals().pop` 对 fast-local 槽位不可靠，必须按名字直接 `del`**，且要用 `try/except NameError` 包住（不同分支上变量可能未赋值）。`[CODE]`
+
+> ⚠️ **这个 patch 的前两版是失败的，值得当反面教材读** `[实践]`：
+>
+> 1. **第一版**只做「断点续跑 + 保存后 `gc`」—— **在完全相同的位置再次被 SIGKILL**。原因是峰值发生在 `rearrange` 与 `clamp` 的中间拷贝上，那是 `gc` 调用**之前**的事，事后回收救不了。
+> 2. **真正生效的是第三版**：在进程内怎么清都不够，改成 **`--single_clip` + 由 `render_stage2_videos.py render_per_clip` 为每个 clip 起一个子进程**，靠 OS 在进程退出时整体回收。代价是**每个 clip 多花约 60 s 重新加载模型**。
+>
+> 另有两处需要知道的背景：上游把"跳过已存在"那段**注释掉了**（约 `:266`），所以在修好之前**每次重启都会死在同一个 clip 上**；以及本层只能确认 clip `0006` 有完整产出证据，**"46/46 全部渲染成功"在源料中没有直接证据**（`未提及`）。
+>
+> 教训层面这条对应"内存峰值要按峰值算、不能按稳态算"，以及 `L01` 的审计纪律：**改了之后结果分毫不变 = 变量没起作用**，此时该质疑假设本身而不是加第 N 个补丁。
 
 ### 6.3 本仓库自己新增的东西（不是"修改"，是"补齐"）
 
@@ -649,13 +678,14 @@ R2E2R 是**普通 clone（不是 submodule）**，放在 `<path>/Real2Edit2Real`
 | §3.2 `EpisodeBundle` 桥接、内参同步缩放 | §6.2 数据格式：Episode Bundle、§2.7 传感器仿真原理 | 原理层讲字段契约，代码层讲**从别的数据格式怎么造出来** |
 | §3.3.2 判分器替身 | §2.5 World Judge、§6.6「奖励开箱即恒为 `None`」 | 原理层说明**为什么必须自建**；代码层是自建的那一份 |
 | §3.4 RWR 微调器 | §5.6「没有 URDF」、§8.4 论文与开源交付的落差 | 原理层指出训练代码缺席；代码层是**补上的那部分**（并诚实标出它退化成了什么，见 S9） |
-| §3.6 Stage 5 隧道协议 | §9.3 RoboColiseum 挑战平台 | 原理层给平台背景，代码层给**线上协议的实现细节** |
+| §3.6 Stage 5 隧道协议 | §9.3.1–§9.3.6 RoboColiseum 托管服务契约 | 原理层给平台契约（含 6 处文档漂移），代码层给**线上协议的实现细节**；⚠️ **二进制分帧布局在平台文档里是 `未提及` 的，本层是唯一成文来源**（§3.6.1） |
+| §6.2 Real2Edit2Real 的两个 patch | §9.2 Real2Edit2Real | 原理层讲方法与三阶段流程（基座是 GE-Sim **v1**，不是 2.0），代码层讲**这套代码在本机跑起来还缺什么**：图像编辑模型已下线、视频渲染必然 OOM |
 | §4.2 常量式配置、§5.1「没有依赖清单」 | §5.3「依赖清单全部未锁版本」、§7.6 配置文件字段 | 上游不锁版本 → 本仓库用**三个隔离 conda 环境**代偿（§5.2） |
 | §6.1 只关了 `sparge_attention` | §5.4 PyTorch 与加速内核 | ⚠️ **两层不一致**：原理层建议首次部署把四个内核开关**全关**；本仓库只关了装不上的那一个并跑通。**保守起见按原理层，想省时间可按本仓库** |
 | §7.2 S3 两套 16 维布局 | §7.2 数据契约 `src/gesim/types.py` | ⚠️ **原理层的做法更稳**：它要求走上游 `wm_state_to_policy_state()`；本仓库**没用**，而是手写了两份重排（`openpi_finetune_head.py:215`、`stage5_adapter.py:166`）。**新写代码请用上游函数** |
 | §7.4 平台假设 | §5.1 硬性前提 | 一致，代码层补了产物盘/代码盘分离这一条实操约束 |
 
-### 8.2 代码 ↔ 教训层（[`ai_knowledge.md`](ai_knowledge.md) 的 `L01`–`L08`）—— 代码里的物证
+### 8.2 代码 ↔ 教训层（[`ai_knowledge.md`](ai_knowledge.md) 的 `L01`–`L09`）—— 代码里的物证
 
 | 教训 | 代码物证 |
 |---|---|
@@ -667,8 +697,9 @@ R2E2R 是**普通 clone（不是 submodule）**，放在 `<path>/Real2Edit2Real`
 | **`L06` 一个常量被多方消费时必须单点定义** | ⚠️ **这条教训在代码里被违反了至少四次**：`46`（S7）、`36`/`10`（S7）、`50`（S7）、`LIFT_BOX_PROMPT` vs `LIFT_BOX_TASK`（S4）、以及两份逐行相同的布局重排（S3）。**代码层是这条教训最直接的反面证据——它写在 `ai_knowledge.md` 里，正因为在这份代码里踩到了** |
 | **`L07` 长流程的可观测性要开跑前铺好** | 每个 Stage 都 `tee` 日志到带时间戳的文件；`stage5_adapter.py:274` 的 `_write_status()` 让外部能轮询 agent 状态；`launch_stage4_wm.py` 的 `status` 子命令 |
 | **`L08` 诚实测量优先于好看分数** | `run_stage4_rl_train.py:194–197` 主动在 docstring 里承认单轨迹 RWR 退化（S9）；`vlm_reward_client.py:219` 的 `_heuristic` docstring 自称 "explicitly non-semantic"；`stage5_adapter.py:192` 自称 "documented no-op" |
+| **`L09` 派生分析的可行性受生成配置约束** | §4.1 的 Stage 2 YAML 里 `trans_range.generate.object` 的 Z 分量上下界**都是 `0.0`** —— 计划中的「Z 轴泛化曲线」在配置层面就已不可能。**这就是「配置项的真实取值必须从配置文件读」的物证**（`P45` / `Q45`） |
 
-### 8.3 代码 ↔ 排障层（[`troubleshooting.md`](troubleshooting.md) 的 `Q01`–`Q41`）—— `[CODE]` 级机制解释
+### 8.3 代码 ↔ 排障层（[`troubleshooting.md`](troubleshooting.md) 的 `Q01`–`Q45`）—— `[CODE]` 级机制解释
 
 | `Qxx` 现象 | 代码层给出的机制 |
 |---|---|
@@ -689,6 +720,10 @@ R2E2R 是**普通 clone（不是 submodule）**，放在 `<path>/Real2Edit2Real`
 | `Q39` 报告小节全空 | §7.2 **S6** —— `run_stage5.sh:104` 的 `--tags A,B` 与 poller 写出的 `final_jobA.json` 对不上 |
 | `Q40` 跨机型评测得 0 分 | §3.6 —— `BOARD_HORIZON` 各榜不同（`manip` 是 30，其余 50）、`WAIST_BOARDS` 只含 `manip`、waist 是 documented no-op（S10） |
 | `Q41` ⚠️ Stage 1 三个 demo 动作雷同（**未解决**） | 代码层**无法解释**：`未发现`任何会导致动作退化的编排层缺陷；`vlm_reward_client.py` 的 `progress` 是人造斜坡（§3.3.2）但不影响开环动作。**该现象的定位仍需回到上游 `gesim/` 源码** `[推断]` |
+| `Q34` 网关卡死：TCP 还在、20+ 分钟不发数据 | §3.6.1 —— 平台按 `agent_id` 分派 session，**同一个 `agent_id` 重连不会被重新分派**，必须换一个新的；`ping_interval=20 s` 探不出这种「活着但不派活」的状态 |
+| `Q38` 一连上就异常断线 | §3.6.1 —— 收到 `drain` 之后**不得再重连**（`TunnelClient` 的状态机 `:399` 把 `DRAINING` 当终态） |
+| `Q42` 榜单 `total` 像均值不像求和 / `Q44` `result` 接口对 uuid 返 500 | 代码层**不解释**：这两条属平台侧口径与路由，机制见原理层 §9.3.4 与 §9.3.5 的漂移表。本层只提供实现侧证据（Stage 5 脚本按数字 id 拉结果） |
+| `Q45` Z 轴泛化曲线画不出来 | §4.1 —— Stage 2 YAML 的 `trans_range.generate.object` 把 Z 钉为 `0.0`；这是**配置层面就已注定**的结果，不是数据处理 bug |
 
 ### 8.4 被本层推翻或修正的结论
 

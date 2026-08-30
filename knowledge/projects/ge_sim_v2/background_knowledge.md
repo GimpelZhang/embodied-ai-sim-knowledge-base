@@ -983,7 +983,7 @@ left, right = CompiledKinematics().fk_action(action16, head_waist4)
 ## 8. 已知问题与限制
 
 > 本章是全文档**工程决策价值最高**的一章。它把三类东西分开：论文自述的限制（§8.1）、我在核对中发现的**证据矛盾**（§8.2）、范式本身决定的能力边界（§8.3）、以及**论文与开源交付之间的落差**（§8.4）。
-> 实践中遇到的具体故障请查排障层 [`troubleshooting.md`](troubleshooting.md)（`Q01`–`Q41`，五类，顶部有快速症状索引）；决策与教训的复盘见经验层 [`ai_knowledge.md`](ai_knowledge.md)。
+> 实践中遇到的具体故障请查排障层 [`troubleshooting.md`](troubleshooting.md)（`Q01`–`Q45`，六类，顶部有快速症状索引；**F 类 `Q42`–`Q45` 是「平台契约与判分口径」，不报错但结论会错**）；决策与教训的复盘见经验层 [`ai_knowledge.md`](ai_knowledge.md)（`P01`–`P45` / `D01`–`D20` / `L01`–`L09`）。
 >
 > 📌 **本章的几条限制已被实践具体量化，引用时建议一并带上实测数字**（全部 `[实践]` 级，来自 2026 年 7–8 月一次五阶段复现）：
 >
@@ -1146,6 +1146,11 @@ left, right = CompiledKinematics().fk_action(action16, head_waist4)
 | 13 | `_g01_fk.so` **仅 linux x86_64**，其它平台闭环直接不可用 | §5.6 |
 | 14 | `pin`（pinocchio）是**基础依赖**，部分平台安装不顺 | §5.3 |
 | 15 | `networks/`、`pipelines/`、`schedulers/` 等被 **lint 豁免**（逐字搬运的数值敏感代码），改动无格式化保护 | §3.4 |
+| 16 | **`Real2Edit2Real` 有两处会当场卡住首次运行**：`tools/preprocess_demo.py` 的 API key 是占位符且无环境变量路径；三个 run 脚本默认指向一个**不存在的 config** | §9.2 |
+| 17 | **R2E2R 的 Metric-VGGT 依赖 `facebook/VGGT-1B`（CC-BY-NC-4.0，非商用）**，且按上游脚本微调需 80 GB 级显存 —— 40 GB 卡上**只能做推理与数据生成** | §9.2、`ai_knowledge.md` §7.2 |
+| 18 | **RoboColiseum 的引擎是 GenieSim 3.0，不是 GE-Sim 2.0**；且选手**不上传策略**，是平台反向拨号连你的 agent | §9.3.1–§9.3.2 |
+
+> ⚠️ **除了上面这些"设计与文档层面的坑"，还有一类坑只在真跑起来才暴露：外部契约与自己数字的口径错误。** 它们不报错、程序照跑，只有把实测数字重算一遍才会发现 —— 见 [`ai_knowledge.md` §4.6 F 类](ai_knowledge.md)（`P42` 榜单总分是均值不是求和 / `P43` 计划里的任务数与拆分是想象出来的 / `P44` `result` 接口要数字 id / `P45` Z 轴分析维度在配置层面就不成立）与 [`troubleshooting.md` `Q42`–`Q45`](troubleshooting.md)。
 
 ## 9. 参考资源
 
@@ -1185,32 +1190,200 @@ left, right = CompiledKinematics().fk_action(action16, head_waist4)
 > 原文：**"感知真实性是获得人类好评的必要条件，但不会按比例转化为下游具身任务的收益"**。
 > **⚠️ 该论文正文中 grep `GE-Sim` 命中 0 次** —— 它评测的 AgiBot 系模型是**前代 Genie Envisioner**，且人类评测得分"在所有维度上显著偏低"。GE-Sim 2.0 的"登顶"指的是**在线榜单**而非这篇论文的表格。完整分析见 §8.2 矛盾 5。
 
-#### Real2Edit2Real —— 建立在 GE-Sim 之上的数据生成器
+#### Real2Edit2Real —— 建立在 GE-Sim **v1** 之上的数据生成器
 
 | 项 | 内容 |
 |---|---|
-| 论文 | **arXiv:2512.19402**《Real2Edit2Real: Generating Robotic Demonstrations via a 3D Control Interface》 |
-| 仓库 | `github.com/Real2Edit2Real/Real2Edit2Real` |
-| 单位 | **AgiBot + PKU-AgiBot Lab** —— **与 GE-Sim 同源** |
+| 论文 | **arXiv:2512.19402v1**《Real2Edit2Real: Generating Robotic Demonstrations via a 3D Control Interface》，**2025-12-22** `[PAPER]` |
+| 会议 | **CVPR 2026**（2026-02-21 接收）；代码与权重 **2026-03-10** 释出 `[README]` |
+| 仓库 | `github.com/Real2Edit2Real/Real2Edit2Real`（121 文件，含 vendored `vggt/`、`videogen/`、`editing/`） |
+| 单位 | 北大 CFCS + **PKU-AgiBot Lab** + **AgiBot**（8 位作者中 4 位是 AgiBot）—— **与 GE-Sim 同源** |
 | 定位 | 通过 3D 控制界面**生成机器人演示数据**（不是仿真器，是**数据工厂**） |
-| 与 GE-Sim 的关系 | **它微调的正是 GE-Sim 的主干**（基于 Cosmos-Predict-2B），把 GE-Sim 改造成"3D 可控多视角视频生成模型" |
+| 与 GE-Sim 的关系 | **它微调的是 GE-Sim `v1`（Genie Envisioner，arXiv 2508.05635）的 2B 主干**，不是 2.0 —— 见下方版本钉定 |
 
-三阶段管线（Real → Edit → Real）：
+##### ⚠️ 版本钉定：它消费的是 GE-Sim **v1**，且 GE-Sim 2.0 **反向零引用**
 
-1. **Metric-scale 几何重建** —— 提出 **Metric-VGGT**：在 VGGT 基础上做真实+仿真混合微调（40K 帧 AgiBot-DigitalWorld 仿真数据 + 10 万条带深度传感器的真机数据，8×H100 / 150K 迭代 / 20 小时），解决原始 VGGT 在机器人场景下相机位姿错误与尺度失配的域差问题。
-2. **深度可靠的空间编辑** —— 在点云上移动物体，投影回深度图；因移动会在背景留空洞，需先用图像编辑模型做背景 inpaint 再重建（附录 Algorithm 2 做尺度对齐）。
-3. **3D 可控视频生成** —— 微调 GE-Sim 主干，用**深度图 + Canny 边缘**作控制条件；训练时对这两个条件做**随机 dropout**（各 0.5、联合 0.1）以抵抗编辑带来的噪声。
+这一条容易想当然地读成"R2E2R 是 GE-Sim 2.0 生态的一环"，实际方向和版本都要更精确：
 
-其它可复用事实：训练用 AgiBot-World 的 **7K episodes / 64 任务**；硬件为 **AgiBot Genie G1，头部 + 左右腕三个 RGB 相机**（**与 GE-Sim 2.0 完全相同的三视角拓扑**）；8×H100 并行下生成一条 20 秒 / 30 FPS 的 episode 约 **48.6 秒**；运动规划引用 **cuRobo**（并行无碰撞运动生成）。
+| 断言 | 证据 |
+|---|---|
+| 基座是 **GE-Sim-2B**，即 v1 的主干 | `[PAPER]` 论文 Table 6 `Base Model: GE-Sim-2B`；§4.1 原文"fine-tuning the backbone of GE-Sim [26] (based on Cosmos-Predict-2B)"，其中 `[26]` = Genie Envisioner (2508.05635) |
+| 代码里加载的就是 v1 发布的权重 | `[CODE]` `videogen/configs/action_depth_canny_cosmos2.yaml:32` → `ge_sim_cosmos_v0.1.safetensors`，来自 ModelScope `agibot_world/Genie-Envisioner` |
+| **时间上不可能引用 2.0** | R2E2R 挂 arXiv 是 **2025-12-22**，GE-Sim 2.0 是 **2026-05-28**（晚 5 个月） |
+| **GE-Sim 2.0 也没有反向引用它** | `[CODE]` 在 `GE-Sim-V2/` 全仓库 grep `real2edit|r2e2r|2512.19402` **命中 0 文件** |
 
-> **生态位小结**：`Real2Edit2Real` **消费** GE-Sim 的主干来造数据，`WorldArena` **评测** GE-Sim 这类模型，`RoboColiseum` 是基于 GE-Sim 的**线上盲测赛事平台**（见 §9.3）。三者围绕 GE-Sim 2.0 构成"造数据 / 评质量 / 办比赛"的闭环。
+> **所以关系是单向的：GE-Sim v1 → R2E2R。** R2E2R 的**产出**是给 VLA 策略（Go-1、π₀.₅）和 Diffusion Policy 当训练数据，**不回流给 GE-Sim**。把它描述成"GE-Sim 2.0 的数据供给方"属于推测，**`未提及`**。
+
+##### 三阶段管线（Real → Edit → Real）
+
+三个阶段与 README 的三条快速开始命令一一对应 `[CODE]`：
+
+| 阶段 | 命令 | 做什么 |
+|---|---|---|
+| 1 几何重建 | `bash scripts/preprocess_demo.sh --config-path configs/mug_to_basket.yaml` | Metric-VGGT 从三路 RGB 出**米制**深度与相机位姿 |
+| 2 空间编辑 | `bash scripts/generate_demo.sh --config-path ...` | 点云上采样 SE(3) 变换、cuRobo 重规划、渲染新深度 |
+| 3 视频生成 | `bash scripts/generate_demo_video.sh --config-path ...` | 微调后的 GE-Sim 主干按深度条件合成三视角视频 |
+
+**输入是 1 条真机遥操 demo**（三视角 RGB + 关节角 + 动作 + URDF/相机内参），输出是 N 条换了物体摆放与轨迹的新 demo；**不需要仿真引擎、不需要数字资产、不需要稠密扫描** `[PAPER]`。
+
+1. **Metric-scale 几何重建 —— Metric-VGGT**。在 VGGT-1B 上做**真实 + 仿真混合微调**（10 万真机 + 4 万 AgiBot-DigitalWorld 仿真帧，8×H100 / 150K 步 / **20 小时**）。三项损失的**域分配**是这一步的设计核心 `[PAPER]`：**相机损失只用仿真**（真机手眼标定被机械公差与运动学误差污染，仿真位姿来自标准 URDF 因而精确，故可直接用朴素 L1）；**深度损失两域都用**（真机有真尺度但有噪声，仿真无噪声但尺度分布偏移）；**点图损失只用仿真**。总损失 `L = λ·L_camera + L_depth + L_pointmap`，**λ = 10**。
+2. **深度可靠的空间编辑（"3D 控制界面"）**。点云拆成机器人 / 物体 / 背景后采样一个随机 SE(3) 变换 **T**，轨迹按 DemoGen 的思路切成两类段：**motion 段**用 cuRobo 重新运动规划；**skill 段**把**同一个 T** 同时施加到物体**和**末端执行器点云，从而保持机器人—物体相对关系与源 demo 完全一致。三个支撑机制：**深度投影**（腕部相机刚连末端，故 T 也施加到相机位姿）、**机器人位姿校正 RPC**（不能把整个机器人当刚体平移——只有末端该动，其余连杆必须按新关节角**重渲染**，`editing/demo_generation/a2d_solver.py:337 render_link_depth_and_mask`）、**背景深度补全**（用 SeedEdit 3.0 抹掉前景后重建，并按 RANSAC 桌面平面偏移之比 `scale = plane_o[3]/plane_edit[3]` 修正图像编辑带来的尺度漂移）。
+3. **3D 可控视频生成**。**从首帧出发**合成整段视频。三个关键设计：**双注意力**（视图内自注意力保细节 + 跨视图自注意力保多视角一致，比每层全局注意力便宜得多）；**深度控制界面**（深度图与图像 latent 拼接后一起进主干，辅以 Canny 边缘 / 动作图 / 光线图）；**平滑物体重定位 SOR**（直接在首帧里挪物体很难，改为在前 30 帧把物体的平移**和旋转**插值过去，把"图像编辑"问题转成"视频生成"问题，`configs/mug_to_basket.yaml:25 parsing_frames.prepare: 30`）。
+
+**条件通道预算**在配置里逐项写明 `[CODE]` `videogen/configs/action_depth_canny_cosmos2.yaml:34`：
+
+```yaml
+in_channels: 32  # 16 (vae) + 3 (traj) + 6 (raymap) + 1 (padding mask) + depth (3) + canny (3)
+```
+
+**条件 dropout**（`:147–151`，与论文一致）：`depth_dropout: 0.5`、`canny_dropout: 0.5`、`all_dropout: 0.1`，而 `traj`/`rays` 为 0。理由值得记住：深度与 Canny 这类**强度型条件会压制其它控制信号**，而它们恰恰是空间编辑后最容易变脏的两个，故独立高概率丢弃迫使模型依赖互补证据。另：**深度归一化是"一个训练块内跨三视角全局归一"**而非逐图归一，以保证 3D 条件在视图与时间上一致（`videogen/lib/data/agibotworld_dataset.py:231`）。
+
+##### 主结果与两条不要漏读的反例
+
+`[PAPER]` Table 1，每格为 20 次试验的成功次数，Total 为四任务均值：
+
+| 训练集 | Total Go-1 | Total π₀.₅ |
+|---|---|---|
+| Real 50 | 61.3 % | 61.3 % |
+| Real 1 + Gen 200 | **65.0 %** | 57.5 % |
+| Real 2 + Gen 200 | **70.0 %** | **70.0 %** |
+| Real 5 + Gen 200 | **78.8 %** | **81.3 %** |
+
+论文口径：5 条源 demo 生成的数据可超过 50 条真机 **17.5 / 20 个点**，数据效率提升 **10–50×**。**但表里有两条论文正文没讨论的反例**：
+
+- **Lift Box 任务是例外** —— Real 1 + Gen 200 **反而比 Real 50 差**（Go-1 12 vs 15，π₀.₅ 10 vs 17）。
+- **"一条 demo 就够"只对 Go-1 成立** —— π₀.₅ 在 Real 1 + Gen 200 只有 57.5 %，**仍低于 Real 50 的 61.3 %**；它需要 ≥2 条源 demo（或按 Table 8 把生成量堆到 ≥300 条）。
+
+##### 能力边界（引用前必看）
+
+- **抓取只被"搬运"，不被"新生成"** —— skill 段刻意复用源 demo 的机器人—物体相对关系，所以它泛化的是物体**在哪**，不是**怎么抓** `[PAPER]`。
+- **编辑范围是有界的** —— 物体平移约 **40 cm × 40 cm** 方形区域内、旋转 **30°–60°** 范围内，工作台本身是 50 cm × 40 cm。
+- **腕部相机必须刚连末端** —— 整个深度投影步骤依赖"把物体变换同样施加到相机位姿"。
+- **RPC 不是可选项** —— 去掉它深度图在运动学上就是非法的，生成结果模糊且不一致。
+- **铰接物体建模不好**（论文自陈的唯一局限），归因于视频生成训练数据里铰接物体太少。
+- **四个消融全是定性图，没有一个给出数字** `[PAPER]`。
+
+##### 安装侧最硬的一条约束 `[CODE]`
+
+`requirements.txt` 51 行里 43 行是 `==` 精确 pin，其中**两个硬编码的平台专用 wheel URL** 是整个安装里最不可绕的：`pytorch3d-0.7.8-cp310-cp310-linux_x86_64.whl`（`py310_cu121_pyt251`）与 `torch_scatter-2.1.2+pt25cu121-cp310-...whl`。两者合起来把环境**锁死在 Linux x86_64 + Python 3.10 + CUDA 12.1 + torch 2.5.1**，任何偏离都在安装期失败。
+
+两个 README 没写、但首次运行必然撞上的坑：
+
+1. **`tools/preprocess_demo.py:43` 的图像编辑 API key 是占位串**，且**没有环境变量通路**——预处理第 3 步（SeedEdit 背景 inpaint）要求把凭据**硬写进源文件**。跑不通该服务就只能跳过第 3 步（`--steps 1245678`）另行提供背景。**本次复现正是在这里打了 patch，见 `code_knowledge.md` §6.2.1。**
+2. **三个运行脚本的默认 `config_path` 指向一个仓库里不存在的文件**（`configs/mug_to_box_1654490_bs60.yaml`），实际只有 `mug_to_basket` / `pour_water` / `lift_box` / `scan_barcode` 四个，**所以 `--config-path` 实际是必传的**。
+
+##### 其它可复用事实
+
+训练用 AgiBot-World 的 **7K episodes / 64 任务**；硬件为 **AgiBot Genie G1，头部 + 左右腕三个 RGB 相机**（**与 GE-Sim 2.0 完全相同的三视角拓扑**）；训练分辨率 **384×512**、chunk 25、memory 4（**与 GE-Sim 2.0 同规格**）；8×H100 并行下生成一条 20 秒 / 30 FPS 的 episode 约 **48.6 秒**，而**生成管线本身单卡 RTX 4090 即可跑**、训练才需要 80 GB 卡；运动规划用 **cuRobo**（`third-party/curobo` 子模块，pin 在 `d64c4b0`，因 CUDA 编译脆弱而单列一个安装脚本）。
+
+> ⚠️ **论文与随仓脚本的一处矛盾** `[CODE]`：`vggt/train.sh:11–12` 把 `LR` 与 `LR_BACKBONE` **都设成 2e-5**，而论文 Table 5 写的是 LR **2e-4** / backbone 2e-5。**释出的脚本复现不出论文陈述的学习率**；另 `GRAD_WEIGHT=1` 是第四个损失项，论文 Eq. 5 里没有对应物。
+
+> **生态位小结（已按证据修正）**：`Real2Edit2Real` **消费 GE-Sim v1 的主干**来造数据（单向，2.0 未反向引用）；`WorldArena` **评测** GE-Sim 这类模型（但其论文正文 grep `GE-Sim` 命中 0）；`RoboColiseum` 是 **GenieSim 3.0** 的托管评测平台，**与 GE-Sim 2.0 无文档层面的关系**（见 §9.3，该结论已推翻本节旧版"基于 GE-Sim 的盲测平台"的说法）。**三者并不构成一个围绕 GE-Sim 2.0 的闭环** —— 它们只是同一家公司周边、各自独立的三个项目。
 
 ### 9.3 RoboColiseum 挑战平台
 
-`robocoliseum.ai/usage` —— 基于 GE-Sim 世界模型的**线上策略盲测平台**：选手提交策略，在托管的世界模型里跑闭环并排名。
+> ⛔ **本节旧版有两处事实错误，已在此推翻**。旧版写"基于 GE-Sim 世界模型的**线上策略盲测平台**：选手**提交策略**，在**托管的世界模型**里跑闭环并排名"——**引擎错了，架构方向也错了**。正确说法见下两小节。若在别处看到旧表述，**以本节为准**。
 
-> **本节内容待补**：相关 skill 包已预置在本机 `~/.claude/skills`（`challenge-*` 系列）。其工作流（登录 → 取数据 → 基线 → 推理 → 运行 → 提交 → 轮询 → 排名）、推理协议（观测键名/形状/dtype、动作维与单位、分块长度、延迟限制）、数据集与基线模型、评分规则等细节，**在本轮核对中未完成提取，暂标 `未提及`**，将在后续补入。
-> 该平台是**托管服务**而非本地代码，因此其契约在本知识库中另立 `[SKILL]` 证据等级（见文档头）——它描述的是**线上服务的约定**，既非本地 `[CODE]`，也非论文 `[PAPER]`。
+#### 9.3.1 它不是 GE-Sim 的平台，而是 GenieSim 3.0 的平台
+
+三条相互独立的证据都指向同一结论：
+
+| 证据 | 内容 |
+|---|---|
+| 上游 README 明说 | `[README]` `genie_sim/README.md:103`："**The Genie Sim Benchmark is the engine behind RoboColiseum**"；`:105` 列出四个榜单 `instruction`/`robust`/`manip`/`spatial` |
+| skill 包里 GE-Sim **零命中** | `[SKILL]` 12 个 `challenge-*` 文件（1516 行）中，`GE-Sim`、`2.0`、`WorldArena`、**`world model`** 全部 **0 次出现**；唯一版本串是 **GenieSim 3.0** |
+| skill 包**物理上就住在 genie_sim 仓库里** | `[CODE]` 这批 skill 的可引用副本在 `genie_sim/source/geniesim_benchmark/skills/robocoliseum/`（10 个目录）；对该目录 grep `ge-sim\|gesim\|world.model\|worldarena` **命中 0 文件** |
+
+**推论**：评测过程是一个**仿真器**在步进机器人并吐相机 JPEG，**没有任何学习到的动力学、视频生成或生成式 rollout 参与**。RoboColiseum 与 GE-Sim 2.0 之间**在文档层面不存在关系**，二者的唯一交集是同属 AgiBot 周边。
+
+> **榜单、任务数与基线分数已由 `genie_sim_v3` 项目覆盖**（`knowledge/projects/genie_sim_v3/background_knowledge.md` §3.5，含四榜 + Sim2Real 非竞赛表、任务数、π₀.₅ / ACoT-VLA / GR00T-N1.7 / π₀ 的成功率）。**本节不重复这些事实**，只写本次复现实际消费到的**平台契约**，以及**文档契约与线上实测的偏差**（§9.3.5）。
+>
+> 顺带收口一个悬案：本次 Stage 5 的计划文本反复出现"**78 个标准化任务**"，复现过程中因无法证实而**把它判为"未经验证数字"并弃用**（`ai_knowledge.md` `P43`）。用 `genie_sim_v3` §3.5 的 `[CODE]` 表回算，四个竞赛榜任务数 **10（instruction）+ 50（robust）+ 10（manip）+ 8（spatial）= 78**，与该数字吻合；而**本次实测 instruction 与 manip 各 10 个任务**，也与该表逐项一致。**所以"78"这个总数本身是对的，错的是计划里"四榜各 20/20/20/18"的拆分**。引用时请以 `genie_sim_v3` §3.5 为出处，不要引用计划文本。
+
+#### 9.3.2 架构是**反向**的：选手不上传模型
+
+这是整套契约里最容易想错的一条 `[SKILL]`：
+
+```
+平台侧：跑仿真器（GenieSim 3.0），持有场景与任务
+选手侧：在自己的 GPU 上跑自己的策略服务
+连接：平台通过 WebSocket 隧道 **反向拨入** 选手的 agent
+```
+
+- **提交体里没有模型产物** —— `POST /api/challenge/job` 的 body 是 `{name, config:{board, model_name, description}}`，其中 `model_name` **只是榜单上的一个标签，不是权重引用**（历史上的 `model_path` 字段已被移除）。
+- **隧道网关是一个与官网不同的固定主机** —— 默认 `TUNNEL_ENDPOINT = ws://<GATEWAY_IP>/api/challenge/tunnel`。**不要"顺手把它改成官网域名"**，那是本契约里被专门警告过的一种错误修复。
+- 并行度由服务端下发（响应里的 `parallelism`），选手按 `K = min(本地 GPU 数, parallelism)` 起 agent。
+
+**八步工作流** `[SKILL]`：下载数据集 → 起基线 → 登录取 JWT → **查配额** → 提交 job → 在自己 GPU 上起 agent 拨隧道 → 轮询结果（2–5 s）→ 看榜单。其中第 4 步不可省：**每次 POST 前都要 `GET /submission/quota`**，因为"没有任何可信的会话内计数器"，返回形如 `{limit:4, used:1, remaining:3}`。
+
+#### 9.3.3 推理协议要点
+
+| 项 | 内容 `[SKILL]` |
+|---|---|
+| 观测编码 | msgpack JSON-RPC 信封，用 **`msgpack_numpy.unpackb`** 解 |
+| 相机 | `head` **400×640**（分辨率最低的那个）、`hand_left` / `hand_right` 各 1056×1280；均为 **JPEG 字节**，需 `cv2.imdecode` 后 **BGR→RGB** |
+| 深度 | schema 里有字段但**被注释掉、实际不下发** |
+| 机器人 | `G2_omnipicker`：双臂 7+7、腰 5 自由度、双夹爪；**头部关节 0 维** |
+| 状态拼装 | `state = concat(arm_joint_states[14], gripper_states[2], waist_joint_states[5])` = **21 维**，顺序 `joint, left_effector, right_effector, waist`；推理期无 `info.json`，故 `state_indices=None`，**必须由 agent 自己交出已排好序的向量** |
+| 动作块长度 | **H = 50**（`instruction` / `spatial`）、**H = 30**（`manip`） |
+| 动作切片 | `0:7`→左臂，`7:14`→右臂，`14:15`→左夹爪，`15:16`→右夹爪，`16:`→腰（仅当 D>16） |
+| 生命周期 | `WARMUP → RUNNING`，**warmup 那一次传的是空帧** —— handler 必须在 `len(frame_bytes)==0` 时短路返回空动作，否则永远卡在 WARMUP |
+
+**动作信封有一处结构性不对称，极易写错**：双臂与腰被包成 `{kind, values}`（`kind` 为 `JOINT_ABS` 或 `EEF_ABS`，左右必须一致），而**两个夹爪是裸的嵌套列表、没有 `kind` 包装**。
+
+> 🔥 **本节最高价值的单条事实 —— plain-msgpack 陷阱** `[SKILL]`：**输入用 `msgpack_numpy` 解，输出却必须用 plain `msgpack`（`raw=False`）能解**。genie-sim 侧不是用 `msgpack_numpy` 解包的，所以直接打包 numpy 数组会以 ext 编码抵达、`np.array(values)` 就地崩坏。**打包前必须把每个数组 `.tolist()` 成原生 Python 列表**。注意失败形态：**你这侧不抛异常，是仿真侧静默拿到垃圾**——这正是本范式典型的"不报错的失败"。
+
+#### 9.3.4 提交、评分与配额规则
+
+- **`board` 是四元闭集** `instruction` / `spatial` / `manip` / `robust`，服务端三处校验。传错值返回 `400 invalid board`（或 `400 no task templates for board`）**并照扣配额**；**4xx 是语义拒绝，不要重试**。
+- **一次提交 = 一个 board = 一个 job**，所以跑满四个榜要提交四次。
+- **配额**：skill 文档写 **4 次/天**、北京时间午夜（UTC+8）重置 `[SKILL]`；但**本次两轮独立实测 `GET /submission/quota` 均返回 `limit: 99` 总量口径** `[实践]`（§9.3.5 漂移表第 4 行）。**以实测为准，但仍按"提交昂贵"操作**。
+- **分数语义：skill 文档说是"和"，实测是"均值"** —— 文档写 `task total = 各 episode 之和`、`job total = 各 task total 之和` `[SKILL]`；而实测 manip 十任务分数之和 6.04、平台报 **0.604**，instruction 之和 7.46、平台报 **0.745**，**除以任务数后与平台报数精确吻合（误差 ≤0.001）** `[实践]`（`P42`）。**引用总分语义时以实测的"均值"为准**；跨 board 比较仍只在同一 board 内有意义。`genie_sim_v3` §3.5 记录的 0–1 成功率与该均值同量纲。
+- **榜单按 board 分列、没有全局总榜**，每行是某用户在该 board 上的最好一次 job；**响应里没有 `rank_change` 字段，不要编造排名变化**。
+- 状态机：文档写 `Pending / Queued / Running / Finished / Failed / Cancelled` `[SKILL]`，**实测在 agent 连上后还有一个 `evaluating` 态、终态是 `completed`/`failed`** `[实践]`（`P38`）——轮询器的 ACTIVE 集合漏掉 `evaluating` 会**把正在跑的 job 误判为终态**。失败日志是容器 stdout/stderr + exit code，定位顺序为"最终 exit_code → 最后一段完整 Traceback → 周围约 20 行 stderr"。
+
+**两条跨条目的排障启发式** `[SKILL]`，与本库的通用纪律完全同构：
+
+1. **"4xx 从来不是网络抖动"** —— 手上拿着 4xx 结构化错误体时不要接受"可能是网络问题"的解释，重试只会烧配额；只有 curl 层失败和 5xx 才可能是瞬时的。
+2. **"5xx 往往是 token 缺失或错误"** —— `curl -fsS` 会把 5xx 折叠并隐藏响应体；排查顺序是确认状态文件已 source → 检查 token 长度非 0 → 检查 JWT 是否三段式 → **去掉 `-f` 看响应体**（常见情况是"用 500 状态码返回的 401 类消息"）。
+
+另有若干专属失效形态：agent 连上就立刻断开 = 撞到并行度上限；job 卡在 Pending = 没有 agent 在线或已掉线超过 **30 秒**重连窗口；**运行中掉线时 SDK 会用同一 `agent_id` 在 30 秒内自动重拨，此时手工重启会与 SDK 竞争**；收到 `drain` 控制帧应让在途请求跑完并**不要重连**；响应里 `parallelism: 0` 是服务端配置错误（**不是配额耗尽**），应停手上报而非硬起 agent。
+
+#### 9.3.5 ⚠️ 文档契约与线上 API 的 6 处漂移
+
+**这是本节最该先读的一张表** `[实践]`。本次复现的结论是一条清晰的分工：**skill 是协议层的权威**（wire 格式、状态字段布局、生命周期——照它写一次通过，线上 8994 帧零协议失败），**但 HTTP API 层必须用 curl 实测校准**。正确姿势是"先读 skill 拿协议，再用两条只读命令（`GET /jobs`、`GET /current-user-info`）实测校准 API，然后才动手写代码"。
+
+| # | skill 文档说法 `[SKILL]` | 线上实测（2026-08）`[实践]` |
+|---|---|---|
+| 1 | 登录可 `GET` + urlencode | `GET` → **405**；`POST` form → **400**；email 带尾随空白 → `user not found`；**只有 `POST` JSON + `email.strip()` → 200** |
+| 2 | `BASE_URL` = `https://robocoliseum.ai` | 实际是 **`http://<GATEWAY_IP>`**（与官网**不同主机**，也不是 https） |
+| 3 | 给出两条官方 SDK 启动路径 | **两条都不存在，SDK 未发布** |
+| 4 | 配额 4 次/天 | **`limit: 99` 总量**（两轮独立实测） |
+| 5 | `/job/<id>/result` 的 `<id>` | 必须传**数字 id**；传 uuid → **500 `invalid job_id`**。须先 `GET /api/challenge/jobs`（响应键是 **`items`**）拿 `items[].id` ← `items[].job_uuid` 的映射 |
+| 6 | 状态机 `pending → running` | 多一个 **`evaluating`** 态（agent 连上后进入）；终态是 `completed` / `failed` |
+
+**外加两条与文档口径不同的事实** `[实践]`：**认证是两层**（`CHALLENGE_TOKEN` = email+password 换来的 JWT，查结果/榜单用；`JOB_TOKEN` = 提交时返回、**永不过期**、只用于拨隧道），计划里假设的单一 `ROBOCOLISEUM_API_KEY` **根本不存在**；**WS 二进制帧布局在 skill 侧是 `未提及` 的**，本次从第三方 agent 源码反推出来的布局见 `code_knowledge.md` **§3.6.1**（L336–351）—— 本库这一层的唯一证据来源就是那次实践。
+
+详见 `ai_knowledge.md` §4.6（`P42`–`P45`）与 §6 教训 `L04`，以及 `troubleshooting.md` `Q42`–`Q45`。
+
+#### 9.3.6 命名、证据等级与 `未提及`
+
+平台在文档里有**三个并存的品牌名**：对外域名是 **RoboColiseum**，skill 内部一律自称 **"the Simulation Challenge"**，而状态文件与 SDK 用第三个名字 **simubotix**（`~/.simubotix-challenge.env`，权限 0600；`contestant_sdk/python/simubotix_agent.py`）。三者指同一套服务。权威 schema 出处是 `main/source/geniesim/benchmark/policy/corobotpolicy.py`。
+
+> 该平台是**托管服务**而非本地代码，因此其契约在本知识库中另立 `[SKILL]` 证据等级（见文档头）——它描述的是**线上服务的约定**，既非本地 `[CODE]`，也非论文 `[PAPER]`。**引用时注意**：`robocoliseum.ai/usage` 是一个 1916 字节的 SPA 空壳、**不提供任何文档内容**，所以本节无法与线上文档交叉验证，全部结论仅来自 skill 文件。此外 skill 存在**两份会漂移的副本**（本机 `~/.claude/skills/` 与上游仓库内），行数与 md5 均有差异——**可长期引用的是上游仓库内那份**。
+
+**`未提及` 清单**（已 grep 确认无证据，不要再搜）：
+
+- **单位与量纲**：关节是弧度还是角度、夹爪/effector 的取值范围，全部未说明。
+- **`EEF_ABS` 的坐标系**未定义。
+- **任何延迟上限 / 超时 / 步进速率 / 控制频率** —— 整套文件里唯一的墙钟常量只有"30 秒网关重连窗口"和"2–5 秒轮询间隔"。
+- **评分细则本身**（rubric）未公开。
+- **WS 二进制帧布局、`drain` 之外的控制帧词表、传输状态机** —— 这三项本应在 5 个被引用但**并不存在**的文档里（`../user-manual.md`、`../quickstart.md`、`../tunnel-protocol.md` 等）。
+- **谁在运营该平台**、数据集分套的规模/episode/任务数、`sim2real` 训练套为何没有对应 board、以及为何没有 `spatial`/`robust` 训练套。
+
+**本次实践对这份清单的增补** `[实践]`：**评分 rubric 仍是 `未提及`**——判分全在平台侧 Isaac Sim 内完成，本地既拿不到也无从干预，**平台也不回传仿真渲染视频**（本地只能录到自己这侧的观测视角）。**"无延迟上限"得到反面印证**：本次单帧推理稳定 **~350 ms**、单个 board 跑了 **3–4.5 小时**，全程未被平台超时中断，故"没有硬性步进速率要求"这一点可按实践理解为真；但**网关侧会停摆**——曾出现 TCP 连着、agent 自认健康、平台进度却冻结 20 分钟以上的情形，且**用同一 `agent_id` 重连不会触发重新派发**（`P34`）。
+
+> ⚠️ **skill 内部有两处自相矛盾**：选榜环境变量在基线 skill 里是 **`PI05_BOARD`**、在推理协议 skill 里是 **`ACOT_BOARD`**；checkpoint 目录名一处带 `_pi05` 后缀一处不带（**以基线 skill 为准**，因为它描述的正是创建这些目录的下载脚本，可用 `PI05_CKPT_DIR` 覆盖）。另外基线仓库地址被 skill 自己标注为"DEBUG/示例值，请替换为官方值"，故该 URL **属临时性质**，勿当权威。
 
 ### 9.4 上游与谱系
 
@@ -1229,9 +1402,9 @@ left, right = CompiledKinematics().fk_action(action16, head_waist4)
 | 文档 | 用途 |
 |---|---|
 | [`quickstart.md`](quickstart.md) | ⭐ **动手前先读**（✅ **已建立**，312 行）：最短路径、五个 Stage 的运行示例与预期输出、改参数、高频 8 问、自检清单 |
-| [`ai_knowledge.md`](ai_knowledge.md) | ✅ **已建立**（417 行，8 章）：复现实战复盘、`D01`–`D20` 决策、`L01`–`L08` 教训（全篇 `[实践]`） |
-| [`troubleshooting.md`](troubleshooting.md) | ✅ **已建立**（899 行）：`Q01`–`Q41` 按报错现象查的 Q&A，顶部有快速症状索引 |
-| [`code_knowledge.md`](code_knowledge.md) | ✅ **已建立**（708 行，8 章）：本机复现仓库 `GE-Sim-V2-tour` 的代码视角；**§7.2 十三条静默失效路径**与 **§8 四层关联映射**是本层结论的物证与反例来源 |
+| [`ai_knowledge.md`](ai_knowledge.md) | ✅ **已建立**（469 行，8 章）：复现实战复盘、`P01`–`P45` 问题、`D01`–`D20` 决策、`L01`–`L09` 教训（全篇 `[实践]`）。**§4.6 F 类是「平台契约与判分口径」专章** |
+| [`troubleshooting.md`](troubleshooting.md) | ✅ **已建立**（974 行）：`Q01`–`Q45` 按报错现象查的 Q&A，顶部有快速症状索引（F 类 `Q42`–`Q45` 是平台契约与判分口径） |
+| [`code_knowledge.md`](code_knowledge.md) | ✅ **已建立**（743 行，8 章）：本机复现仓库 `GE-Sim-V2-tour` 的代码视角；**§7.2 十三条静默失效路径**与 **§8 四层关联映射**是本层结论的物证与反例来源 |
 | [`00-index.md`](00-index.md) | 本项目章节地图（带行号）+ `未提及` 清单 |
 
 > **原理层与实践层冲突时以哪层为准**：本文件描述的是**上游设计与文档口径**；`ai_knowledge.md` / `troubleshooting.md` 记录的是**某一次具体复现的实测**；`code_knowledge.md` 描述的是**那次复现的编排代码**（不是上游本体）。
@@ -1239,4 +1412,3 @@ left, right = CompiledKinematics().fk_action(action16, head_waist4)
 > - **能力边界与设计原理**：以本文件为准（实测只覆盖了它的一部分用法）。
 > - **上游被实际怎么改的**：以代码层 §6 为准（本文件 §5.4 "四个内核全关"的建议已被 §6.1 的实测放宽，两处均已就地标注）。
 > - ⚠️ **版本落差**：几层核对的不是同一个检出点，**API 写法不保证跨版本通用，能力边界结论可以**。
-
