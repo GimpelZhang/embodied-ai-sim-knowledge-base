@@ -727,7 +727,9 @@ python examples/rigid/single_franka.py
 # 3) 无显示器的机器上，改用无 viewer 的脚本或设 show_viewer=False
 ```
 
-装不上 / 跑不起来时的排查顺序见 **[排障层 `troubleshooting.md`](./troubleshooting.md)**，动手命令见 **[速查层 `quickstart.md`](./quickstart.md)**。
+装不上 / 跑不起来时的排查顺序见 **[排障层 `troubleshooting.md`](./troubleshooting.md)**（A 类：安装与依赖）。
+一份**可直接复制的实机安装步骤**（含 `genesis-world==1.2.2` / `rsl-rl-lib==5.0.1` / `numpy==1.26.4` 三个版本锁定项，以及"不要装 `pyuipc`"的理由）见 **[速查层 `quickstart.md`](./quickstart.md) §1 环境准备**；对应的依赖清单与锁定理由见 **[代码层 `code_knowledge.md`](./code_knowledge.md) §5**。
+> ⚠️ 注意速查层与代码层实测于 **1.2.2**，本章描述 **1.3.3**，版本号需按你的目标版本调整。
 
 ---
 
@@ -899,7 +901,8 @@ while True:
 ④ 按几何条件（而非图像）写断言判定成功
 ```
 
-> 💡 **一条来自实践的建议**：判定"抓取是否成功"用**几何断言**（如 `torch.cdist` 算穿透、物体高度阈值）而不是看图，评测才能无人值守跑批。见经验层与 **[代码层 `code_knowledge.md`](./code_knowledge.md)**。
+> 💡 **一条来自实践的建议**：判定"抓取是否成功"用**几何断言**（如 `torch.cdist` 算穿透、物体高度阈值）而不是看图，评测才能无人值守跑批（教训 `L03`）。
+> 一套完整的实现见 **[代码层 `code_knowledge.md`](./code_knowledge.md) §3.2（VLA 闭环循环体）与 §1.3（demo + 独立验证门的成对结构）**；可直接照抄的命令见 **[速查层 `quickstart.md`](./quickstart.md) §2.2**。
 
 跑不通时按 **[排障层 `troubleshooting.md`](./troubleshooting.md)** 的「快速症状索引」查。
 
@@ -1177,16 +1180,16 @@ python -c "import genesis as gs; print([x for x in dir(gs.sensors) if not x.star
 
 ### 9.5 本知识库内的关联文档
 
-> 📌 **当前状态**：原理层（本文档）、经验层、排障层与索引均已就绪；速查层与代码层仍在编写中，下表中标 ⏳ 的文档**尚未存在**，链接暂时是死链。
+> 📌 **当前状态**：**五层齐备**（速查 / 原理 / 经验 / 排障 / 代码）＋ 索引，全部链接均已生效。
 > ⚠️ **版本落差**：本文档描述 **1.3.3**，而经验层与排障层实测于 **1.2.2** —— 后两者的具体命令与 API 写法**不可直接套用到新版本**。
 
 | 层 | 文档 | 什么时候看 |
 |---|---|---|
-| ⏳ 速查层 | `quickstart.md` | **要动手跑**，想不起命令 |
+| ✅ 速查层 | [`quickstart.md`](./quickstart.md) | **要动手跑**，想不起命令（260 行，可整篇读；派生层，不含新事实） |
 | ✅ 原理层 | 本文档 | 查 API / 参数 / 设计原理 / 能力边界 |
 | ✅ 经验层 | [`ai_knowledge.md`](./ai_knowledge.md) | 想知道**为什么会这样**、试过哪些无效方法（8 章 / `P01`–`P37` / `D01`–`D20` / `L01`–`L08`） |
 | ✅ 排障层 | [`troubleshooting.md`](./troubleshooting.md) | **手上有一条具体报错** → 顶部「快速症状索引」（`Q01`–`Q37`，8 类） |
-| ⏳ 代码层 | `code_knowledge.md` | 要改**复现仓库 `genesis-world-tour`** 的代码 |
+| ✅ 代码层 | [`code_knowledge.md`](./code_knowledge.md) | 要改**复现仓库 `genesis-world-tour`** 的代码（570 行 / 8 章；§8 有与本层的完整映射表） |
 | ✅ 索引 | [`00-index.md`](./00-index.md) | 带行号的章节地图 + `未提及` 清单 |
 
 ### 9.6 源料清单（**仅本机有效**，`sources/` 已 gitignore）

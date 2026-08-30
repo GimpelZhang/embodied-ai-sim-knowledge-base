@@ -4,6 +4,7 @@
 > **证据等级**：全篇为 **`[实践]`** 级——记录的是本机一次复现中的实测现象与解法，**不是 Genesis World 的官方结论**。
 > **版本**：全部实测于 **genesis-world 1.2.2 + gs-nyx 0.1.3**（Python 3.12.13 / PyTorch 2.10.0+cu128 / CUDA 11.8 / A800-40GB / Ubuntu 22.04 headless）。原理层 [`background_knowledge.md`](background_knowledge.md) 描述的是 **1.3.3**，**本篇的具体写法不可直接套用到新版本**。
 > **脱敏**：本机绝对路径已替换为 `<user_home>` / `<path>`，主机名替换为 `<host>`。全篇无账号、密码、密钥、token。
+> **想看解法在代码里长什么样**：本篇给「怎么绕过去」，代码层 [`code_knowledge.md`](code_knowledge.md) 给「代码里为什么这么写」——其 **§8.3** 是一张 18 行的 `Qxx` → 代码位置对照表；**§7.2** 是「改了没生效」的静默失效清单。只想拿到可直接执行的命令，走速查层 [`quickstart.md`](quickstart.md)。
 
 ---
 
