@@ -11,7 +11,7 @@
 | 项目 slug | 名称 / 上游 | 开发方 | 状态 | ⭐ quickstart（速查层） | background（原理层） | ai_knowledge（经验层） | troubleshooting（排障层） | code_knowledge（代码层） | 项目内索引 |
 |---|---|---|---|---|---|---|---|---|---|
 | `genie_sim_v3` | Genie Sim 3.x (`AgibotTech/genie_sim`) | 智元机器人 AgiBot | ✅ 已完成 | [`quickstart.md`](genie_sim_v3/quickstart.md) | [`background_knowledge.md`](genie_sim_v3/background_knowledge.md) | [`ai_knowledge.md`](genie_sim_v3/ai_knowledge.md) | [`troubleshooting.md`](genie_sim_v3/troubleshooting.md) | [`code_knowledge.md`](genie_sim_v3/code_knowledge.md) | [`00-index.md`](genie_sim_v3/00-index.md) |
-| `genesis_world` | Genesis World (`Genesis-Embodied-AI/genesis-world`) | Genesis Embodied AI | ⏳ 待编写 | — | — | — | — | — | — |
+| `genesis_world` | Genesis World (`Genesis-Embodied-AI/genesis-world`) | Genesis Embodied AI | 🔨 编写中（原理层已完成） | — | [`background_knowledge.md`](genesis_world/background_knowledge.md) | — | — | — | [`00-index.md`](genesis_world/00-index.md) |
 | `ge_sim_v2` | GE-Sim-V2 (`AgibotTech/GE-Sim-V2`) | 智元机器人 AgiBot | ⏳ 待编写 | — | — | — | — | — | — |
 | `lw_benchhub` | LW-BenchHub (`LightwheelAI/LW-BenchHub`) | 光轮智能 Lightwheel | ✅ 已完成（五层齐备） | [`quickstart.md`](lw_benchhub/quickstart.md) | [`background_knowledge.md`](lw_benchhub/background_knowledge.md) | [`ai_knowledge.md`](lw_benchhub/ai_knowledge.md) | [`troubleshooting.md`](lw_benchhub/troubleshooting.md) | [`code_knowledge.md`](lw_benchhub/code_knowledge.md) | [`00-index.md`](lw_benchhub/00-index.md) |
 
@@ -60,15 +60,29 @@
 
 ## 2. genesis_world — Genesis World
 
-- **开发方**：Genesis Embodied AI
-- **background 文档**：⏳ 未编写
-- **简短总结（来自源料与实战仓库，尚未经 `[CODE]` 级核验）**
-  新一代 Python 原生物理仿真平台，卖点是**单卡即可大规模并行**与**多物理场耦合**。本机实战覆盖四个方向：OpenVLA 端到端闭环控制（Franka Panda）、配置驱动的场景程序化生成与批量鲁棒性压测、单卡大规模并发 PPO 强化学习（Unitree Go2 步态）、刚柔/刚流耦合的"无穿透"交互（布料折叠、海绵挤压、含水玻璃杯倒地）。
-- **关键标签**
-  `物理仿真` `大规模并行` `强化学习训练` `软体与流体` `多物理场耦合` `场景生成` `VLA闭环` `四足机器人` `Headless渲染`
-- **本机相关资源**
-  - 源料：`sources/genesis_world/background.txt`（上游仓库 + readthedocs 用户指南 + 官方 blog）、`Genesis_world_01.txt`、`Genesis_world_02.txt`
-  - 实战复现仓库：`genesis-world-tour/`（含 `CLAUDE.md`、stage3/stage4 产物）
+- **开发方**：Genesis Embodied AI（Genesis AI）
+- **版本**：核对于 **v1.3.3**（HEAD `19f56d6`，2026-08-30），许可证 **Apache 2.0**；PyPI 包名 `genesis-world`，import 名 `genesis`，惯用别名 `gs`
+- **background 文档**：[`genesis_world/background_knowledge.md`](genesis_world/background_knowledge.md)（1197 行，9 章齐备，含 §2.5 传感器仿真 7 小节）
+- **ai_knowledge 文档**：⏳ 待编写
+- **troubleshooting 文档**：⏳ 待编写
+- **code_knowledge 文档**：⏳ 待编写（对应复现仓库 `genesis-world-tour/`）
+- **quickstart 速查卡**：⏳ 待编写
+- **项目内索引**：[`genesis_world/00-index.md`](genesis_world/00-index.md) ← **先读这个拿行号**
+
+**简短总结**
+Genesis AI 出品的通用具身智能仿真平台（前身是 2024-12 的学术项目 "Genesis"）。核心是把 **8 类求解器**（rigid / FEM / MPM / SPH / PBD / stable-fluid / kinematic / tool）放进**同一场景、同一份状态**，用**三种可互换的耦合器**（Legacy 默认 / SAP / IPC，改一行 `coupler_options=` 切换）处理跨物理交互；`scene.build(n_envs=N)` 一键铺开大规模并行；支持可微仿真与 CPU/CUDA/ROCm/Metal 多后端。**⚠️ 官方宣传的"四层栈"有一半不在这个 pip 包里**：Render 层的 **Nyx** 在 `genesis/**/*.py` 中 **grep 零命中**（是独立包 `gs-nyx`，按插件装），Compiler 层的 **Quadrants** 是独立包（硬依赖 `quadrants==1.3.0` 精确 pin）；v1.3.3 的 `gs.renderers` 下只有 `Rasterizer`/`RayTracer`/`BatchRenderer`。另：博客称 "Genesis World **1.0**" 而 pip 上是 **1.3.3**，两套编号勿混引。**传感器子系统是本库四个项目里最完整的**（两层缺陷继承：`SensorOptions` 给全部传感器 `delay`/`jitter`/`history_length`，`SimpleSensorOptions` 追加 `resolution`/`bias`/`noise`/`random_walk`，IMU 有 3 轴×5 类完整矩阵，还有激光雷达 / 深度 / 触觉 / 接触力 / 关节力矩 / 温度栅格），**但所有缺陷参数默认都是 `0.0`（默认即理想真值），且相机直接派生自 `Sensor`、根本没有噪声字段**。
+
+**关键标签**
+`物理仿真` `通用物理引擎` `多物理场耦合` `可微分仿真` `大规模并行` `强化学习训练` `软体与流体` `VLA闭环` `场景生成` `传感器仿真` `触觉仿真` `激光雷达` `IPC接触` `光线追踪渲染` `GaussianSplat` `跨平台GPU` `sim2real` `数字孪生` `OpenUSD` `Headless渲染` `四足机器人`
+
+**五个"别踩"提醒**（详见项目内索引末尾）
+① **别以为装了 `genesis-world` 就有 Nyx 渲染**（零命中，要 `pip install gs-nyx`）；② **别以为传感器默认带噪声**（全部默认 `0.0`，相机连字段都没有）；③ **别在 `build()` 之后想加实体/传感器/相机**（不可逆分界线）；④ **别凭直觉升级依赖** —— 6 处 pin（`trimesh`/`libigl`/`pyglet`/`z3-solver`/`Pillow`/`pygltflib`）各对应一个已知上游破坏，`quadrants==1.3.0` 是精确 pin，装 `[dev]` 会把 mujoco 从 `>=3.2.5` 收紧到 `>=3.10,<3.11`，**且 PyTorch 不在依赖里必须先单独装**；⑤ **别把博客数字当工程依据**（103× / 4.6× / Pearson 0.8996 全是 `[官网]` 级，sim-real 评测套件未开源；速度类可自测 `examples/speed_benchmark/`、`tests/benchmarks/`）。另有 **15 条 `[CODE]` 级限制**与 **9 项 `未提及` 清单**见 `background_knowledge.md` §8.1 / §8.4。
+
+**本机相关资源**（均已 gitignore，仅本地有效）
+- 源料：`sources/genesis_world/background.txt`（上游仓库 + readthedocs 用户指南 + 官方 blog）、`Genesis_world_01.txt`（第三方技术分析，`[文章]` 级）、`Genesis_world_02.txt`（官方博客译文，`[官网]` 级）
+- 上游仓库克隆：`sources/genesis_world/genesis-upstream/` ← **`[CODE]` 级证据都在这里核实**
+- 复现原始记录：`sources/genesis_world/genesis-world-tour.md`（16471 行）
+- 实战复现仓库：`genesis-world-tour/`（33 文件；Stage1 OpenVLA 闭环 / Stage2 场景工厂+批量评测 / Stage3 Go2 PPO / Stage4 多物理）
 
 ---
 
@@ -128,11 +142,13 @@ Lightwheel 出品的机器人操作 benchmark，本质是**架在 Isaac Lab + Is
 |---|---|---|
 | 标准化任务**评测**、刷榜、要现成任务集 | `genie_sim_v3` | 200+ 任务 / 10 万+ 场景 / RoboColiseum 引擎 |
 | 需要 **ROS 2 原生**实时闭环、接真实控制栈 | `genie_sim_v3`（RT Engine 栈） | 10 个 ROS 2 包，话题级接口 |
-| **大规模并行 RL**、单卡吞吐优先 | `genesis_world` | 单卡大规模并发是其核心卖点 |
-| **软体 / 布料 / 流体**耦合 | `genesis_world`；退而求其次 `genie_sim_v3` 的 Newton-standalone | genie_sim 仅该后端支持布料软体，且为实验路径 |
+| **大规模并行 RL**、单卡吞吐优先 | `genesis_world` | `scene.build(n_envs=N)` 一键铺开；`reset(envs_idx=)` 支持只重置已终止的环境。⚠️ **只有 GPU + `n_envs>0` 才吃满并行**（`PARA_LEVEL.ALL`） |
+| **软体 / 布料 / 流体**耦合 | `genesis_world`；退而求其次 `genie_sim_v3` 的 Newton-standalone | genesis 有 FEM/MPM/SPH/PBD/SF 五类可耦合求解器 + 三种耦合器；genie_sim 仅该后端支持布料软体，且为实验路径 |
+| **可微分仿真**（梯度回传到物理量） | `genesis_world` | 四者中唯一提供 —— `SimOptions(requires_grad=True)` + `scene.backward(loss)`。⚠️ 硬约束 `substeps_local % substeps == 0`，显存随 `substeps_local` 线性增长，很容易 OOM |
+| **触觉 / 激光雷达 / IMU 噪声**建模 | `genesis_world` | 四者中唯一有成体系的传感器缺陷层。⚠️ 但**默认全为 `0.0`，必须显式配置**；**相机不在噪声层**（`Camera` 直接派生自 `Sensor`） |
 | 已在 **lerobot / IsaacLab** 生态里，想少改代码 | `lw_benchhub` | 直接复用 IsaacLab-Arena + lerobot 数据与策略接口 |
 | 想**跳过物理**、只做视觉级泛化与快速衍生 | `ge_sim_v2` | 生成式世界模型，无物理解算 |
-| **传感器保真度**要求高（深度/LiDAR/IMU 噪声） | ⚠️ 四者都要先查缺口 | genie_sim_v3 已确认仅 RGB 有噪声模型；**`lw_benchhub` 已确认最弱 —— 只有 RGB，且无任何噪声模型**；其余两者未核验 |
+| **传感器保真度**要求高（深度/LiDAR/IMU 噪声） | ⚠️ 四者都要先查缺口；相对最好的是 `genesis_world` | **`genesis_world` 有完整的两层缺陷模型**（`delay`/`jitter` + `resolution`/`bias`/`noise`/`random_walk`，IMU 有 3×5 矩阵），**但默认全 `0.0` 且相机无噪声层**；genie_sim_v3 已确认仅 RGB 有噪声模型；**`lw_benchhub` 已确认最弱 —— 只有 RGB，且无任何噪声模型**；ge_sim_v2 未核验 |
 | **多本体横向对比**（同任务换机器人） | `lw_benchhub` | 28 个机器人变体 × 272 个任务的组合注册表；但**位姿需查 `layout_task_mapping.csv`**（§4.5） |
 | **离线 / 内网环境**部署 | ⚠️ 避开 `lw_benchhub` | 场景与物体资产运行时联网从 Lightwheel 云端拉取，无独立下载脚本（§4.10） |
 
@@ -140,8 +156,9 @@ Lightwheel 出品的机器人操作 benchmark，本质是**架在 Isaac Lab + Is
 
 ## 标签词表（新增项目时请复用，勿造同义词）
 
-- **范式**：`物理仿真` `世界模型` `视频扩散` `非物理引擎`
-- **底座 / 生态**：`OpenUSD` `IsaacSim` `IsaacLab` `MuJoCo` `lerobot生态` `ROS2集成`
-- **能力**：`VLA闭环` `强化学习训练` `数据采集` `评测基准` `场景生成` `场景生成-LLM驱动` `数据飞轮` `课程学习` `遥操作` `运动规划-cuRobo` `传感器仿真` `Real2Sim` `Real2Sim-3DGS` `大规模并行` `软体与流体` `多物理场耦合` `线上榜单盲测`
+- **范式**：`物理仿真` `通用物理引擎` `世界模型` `视频扩散` `非物理引擎`
+- **底座 / 生态**：`OpenUSD` `IsaacSim` `IsaacLab` `MuJoCo` `lerobot生态` `ROS2集成` `跨平台GPU`
+- **能力**：`VLA闭环` `强化学习训练` `数据采集` `评测基准` `场景生成` `场景生成-LLM驱动` `数据飞轮` `课程学习` `遥操作` `运动规划-cuRobo` `传感器仿真` `触觉仿真` `激光雷达` `Real2Sim` `Real2Sim-3DGS` `大规模并行` `可微分仿真` `软体与流体` `多物理场耦合` `IPC接触` `sim2real` `数字孪生` `线上榜单盲测`
+- **渲染**：`Headless渲染` `光线追踪渲染` `GaussianSplat`
 - **形态**：`双臂操作` `四足机器人` `人形机器人` `移动操作`
-- **工程**：`容器化部署` `Headless渲染`
+- **工程**：`容器化部署`

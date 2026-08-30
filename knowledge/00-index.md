@@ -44,7 +44,7 @@ knowledge/projects/<项目>/00-index.md   ← 章节地图，定位到具体小�
 | 规则 | 说明 |
 |---|---|
 | 按需读取 | `background_knowledge.md` 单文件可达 1600+ 行。**永远先读该项目的 `00-index.md` 拿到行号，再用 `Read` 的 `offset`/`limit` 精准读取**，不要整篇载入。 |
-| 认证据等级 | 正文每条结论带 `[CODE]` / `[PAPER]` / `[README]` / `[实践]` / `[推断]` 标注。**做工程决策只信 `[CODE]`**；`[PAPER]` 是宣称值，`[实践]` 是本地踩坑记录，不等于官方结论；`[推断]` 表示证据不足以定论（仅代码层使用）。 |
+| 认证据等级 | 正文每条结论带 `[CODE]` / `[PAPER]` / `[README]` / `[官网]` / `[文章]` / `[实践]` / `[推断]` 标注。**做工程决策只信 `[CODE]`**（可在上游仓库当场验证）；`[PAPER]` / `[官网]` 是论文或官方博客的宣称值，`[README]` 来自仓库文档，`[文章]` 是第三方分析（二手），`[实践]` 是本地踩坑记录、不等于官方结论；`[推断]` 表示证据不足以定论（代码层与 genesis_world 原理层使用）。<br>⚠️ `[官网]` / `[文章]` 两级由 `genesis_world` 引入 —— 该项目源料含大量**无法复现的官方性能宣称**（如 103× / 4.6× / Pearson 0.8996），已在 `background_knowledge.md` §8.3 集中隔离。 |
 | 不补空白 | 标注 `未提及` 的地方表示三方资料均无证据。**不要据此推测**，需要就去读上游仓库源码，读到后回写本库。 |
 | 无密钥无绝对路径 | 本库所有文档禁止出现账号、密码、密钥、access token；示例中的本地路径统一写作 `<your_path>`、主机地址写作 `<INFER_IP>:<PORT>`。**新增内容时沿用此约定。** |
 | 行号会漂 | 索引里的行号是编写时快照。若 `Read` 到的内容与索引描述不符，用 `grep -n '^## '` 重新定位并**顺手更新索引**。 |
@@ -89,7 +89,7 @@ simulation-knowledge/
 | 项目 | 定位一句话 | 速查层 | 原理层文档 | 经验层文档 | 排障层文档 | 代码层文档 |
 |---|---|---|---|---|---|---|
 | **genie_sim_v3** | 智元 Genie Sim 3.x，OpenUSD + Isaac Sim 的评测/采集/RL 三栈仿真平台 | ⭐ [速查卡](projects/genie_sim_v3/quickstart.md) | ✅ [已完成](projects/genie_sim_v3/background_knowledge.md) | ✅ [已完成](projects/genie_sim_v3/ai_knowledge.md) | ✅ [Q01–Q29](projects/genie_sim_v3/troubleshooting.md) | ✅ [已完成](projects/genie_sim_v3/code_knowledge.md) |
-| **genesis_world** | Genesis World 物理平台，单卡大规模并行 + 刚柔流多物理场 | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 |
+| **genesis_world** | Genesis World 通用物理平台，8 类求解器 + 3 种可换耦合器，单卡大规模并行、可微仿真、传感器缺陷建模 | ⏳ 待编写 | ✅ [已完成](projects/genesis_world/background_knowledge.md) | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 |
 | **ge_sim_v2** | 智元 GE-Sim-V2，视频扩散**生成式世界模型**（非传统物理仿真） | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 |
 | **lw_benchhub** | 光轮 LW-BenchHub，架在 Isaac Lab + IsaacLab-Arena 之上的**薄组合层**操作 benchmark | ⭐ [速查卡](projects/lw_benchhub/quickstart.md) | ✅ [已完成](projects/lw_benchhub/background_knowledge.md) | ✅ [已完成](projects/lw_benchhub/ai_knowledge.md) | ✅ [Q01–Q38](projects/lw_benchhub/troubleshooting.md) | ✅ [已完成](projects/lw_benchhub/code_knowledge.md) |
 
@@ -110,7 +110,8 @@ simulation-knowledge/
 | **某个问题至今没解决？** | `troubleshooting.md` §九「未解决 / 仅部分解决」—— 避免在已知死路上重复投入 |
 | 跑一次 VLA 闭环评测 | 第 6 章（基本使用流程）→ 第 7 章（API/配置） |
 | 写脚本调用仿真器 | 第 7 章（常用 API / 配置文件结构） |
-| 搞清相机/深度/LiDAR/IMU 出的数是不是真值 | 第 2 章「传感器仿真」小节（genie_sim_v3 在 §2.4 含 16 个子节；lw_benchhub 在 §2.6 含 13 个子节，**结论是大量能力缺失，先看 §2.6.13 的 21 行边界表**） |
+| 搞清相机/深度/LiDAR/IMU 出的数是不是真值 | 第 2 章「传感器仿真」小节（genie_sim_v3 在 §2.4 含 16 个子节；lw_benchhub 在 §2.6 含 13 个子节，**结论是大量能力缺失，先看 §2.6.13 的 21 行边界表**；**genesis_world 在 §2.5 含 7 个子节 —— 四者中建模最完整，但结论是"默认全部理想化"：所有缺陷参数默认 `0.0`，且相机根本没有噪声层，见 §2.5.7**） |
+| **官方/博客宣称的性能数字能不能信** | ⚠️ 先看该项目的证据等级标注。**genesis_world 的 103× / 4.6× / Pearson 0.8996 等全部是 `[官网]` 级、评测套件未开源**（`background_knowledge.md` §8.3）；速度类可自测 `examples/speed_benchmark/`、`tests/benchmarks/` |
 | 选物理后端 / 调接触参数 | 第 2 章「物理引擎」小节 |
 | 判断某能力有没有、值不值得投入 | 第 4 章（关键特性）+ 第 8 章（限制），两章对照看。**lw_benchhub 额外先看 §4.2「规模数字实测校准」** —— README 有 4 处数字与代码不符 |
 | **命中"某能力到底有没有"的反复搜索** | 各项目 `00-index.md` 末尾的 **`未提及` / `未找到` 清单** —— 已 grep 确认无证据的方向，**命中就别再搜了** |
@@ -125,5 +126,7 @@ simulation-knowledge/
 - **已完成（五层齐备）**：**2 个项目**
   - **genie_sim_v3** —— 原理层 1694 行（9 章齐备，含传感器仿真深挖）＋ 经验层 393 行（五阶段复现复盘，18 个问题条目 / 10 个决策 / 8 条教训）＋ 排障层 605 行（`Q01`–`Q29` FAQ，按现象检索）＋ **代码层 1251 行**（对应复现仓库 `genie_sim_v3_tour`，8 章：结构 / 入口 / 核心模块 / 配置 / 依赖 / 修改点 / 注意事项 / 四层关联）＋ **速查层 385 行**
   - **lw_benchhub** —— 原理层 1478 行（9 章齐备，含 §2.6 传感器仿真 13 小节、§4.2 规模数字实测校准、§8.3 十六项已验证代码缺陷、§8.7 未找到清单）＋ 经验层 432 行（`P01`–`P38` / `D01`–`D18` / `L01`–`L08`）＋ 排障层 864 行（`Q01`–`Q38`，5 组，带快速症状索引与贡献指南）＋ **代码层 952 行**（对应复现仓库 `lw_benchhub_tour`；`[CODE]`×72 / `[实践]`×15 / `[推断]`×8；含 **11 处 monkey patch 全表**（上游 10 + 本地新增 1）、**两份 vendored IsaacLab 的判别法**、**11 条静默失效路径**、22 行 `Qxx`→机制映射）＋ **速查层 403 行**（3 个带预期输出的运行示例）
-- **源料就绪、待编写**：2 个项目（genesis_world / ge_sim_v2），`sources/<slug>/` 下已有 URL 清单与原始资料，且本机均有对应的实战仓库可交叉验证
-- **下一步建议**：按同一五层模板处理 genesis_world 与 ge_sim_v2。每篇完成后同步更新本文件、`projects/00-index.md` 与该项目 `00-index.md` 三处
+- **编写中**：**1 个项目**
+  - **genesis_world** —— **原理层 1197 行已完成**（9 章齐备，核对上游 v1.3.3 / HEAD `19f56d6`；含 §2.5 传感器仿真 7 小节、§3.1「四层栈 vs 仓库实际内容」的 Nyx 零命中证据、§5.3 六处依赖 pin 逐条溯因、§8.1 十五条 `[CODE]` 级限制、§8.4 九项未提及清单）。其余四层（速查 / 经验 / 排障 / 代码）待编写；原理层中已埋下指向这四层的**前向链接**，补齐后需回头核对
+- **源料就绪、待编写**：1 个项目（ge_sim_v2），`sources/ge_sim_v2/` 下已有 URL 清单与原始资料，且本机有对应的实战仓库可交叉验证
+- **下一步建议**：先补齐 genesis_world 的经验层 / 排障层 / 代码层 / 速查层，再按同一五层模板处理 ge_sim_v2。每篇完成后同步更新本文件、`projects/00-index.md` 与该项目 `00-index.md` 三处
