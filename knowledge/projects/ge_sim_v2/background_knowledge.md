@@ -611,10 +611,13 @@ GE-Sim 2.0 唯一的"相机模型"就是 **6 通道 raymap**（§2.3.3）：由*
 ---
 ## 5. 安装与依赖
 
-> 本章全部 `[CODE]` 级，读自仓库 `docs/installation.md` 与 `pyproject.toml`。动手前请先读速查层 `quickstart.md`（若已建立）。
+> 本章全部 `[CODE]` 级，读自仓库 `docs/installation.md` 与 `pyproject.toml`。
+> ⭐ **动手装之前请先读速查层 [`quickstart.md`](quickstart.md) §1 环境准备（L30–102）** —— 那里给的是**实测跑通过的**版本锁定项、三个 conda 环境的分工、以及"必须在 import 之前设"的环境变量。本章给出处与原理，速查层给可直接敲的命令。
+> 复现仓库侧的依赖现状见代码层 [`code_knowledge.md`](code_knowledge.md) **§5（L427–475）**，其中 **§5.1 明确 `未发现` 任何依赖清单文件**（`requirements.txt` / `setup.py` / `pyproject.toml` / `environment.yml` 全无），换机只能手装。
 >
 > ⚠️ **本章给的是"应该怎么装"，不是"实际会撞到什么"。** 本项目依赖除 `torch>=2.0` 外**全无版本约束**（§5.3），实测装依赖时**顺序本身就是坑**。真正踩过的 9 个安装/环境问题见排障层 [`troubleshooting.md`](troubleshooting.md) **B 类 `Q08`–`Q16`**，其中最容易撞的三条：
 > - `Q09` —— `spas_sage_attn` **根本不在 PyPI 上**，§5.4 那四个加速内核开关**首次部署应全部关掉**；
+>   ⚠️ **但一次实测给出了更省事的结论**：复现仓库**只关了 `sparge_attention` 这一个**、另三个保持 `true`，五个 Stage 全部跑通（[`code_knowledge.md`](code_knowledge.md) §6.1 / §8.4）。装不上任何内核时才需要按本章"四个全关"。
 > - `Q11` —— openpi 依赖地狱，**`regex` 必须在 torch 之前装**，且 lerobot 会把 numpy 顶成 2.x，装完要回锁 1.26.4；
 > - `Q12` —— **绝不要装 conda 的 gcc**，它的传递依赖会把 CUDA 12.1 顶成 13.x（`--freeze-installed` **明确无效**）。
 
@@ -682,6 +685,9 @@ pip install torch==2.7.0 torchvision==0.22.0 torchaudio==2.7.0 \
 | （FK 工具） | **PyTorch3D**（源码编译） | 官方标注"部分 FK 工具用到" |
 
 > **关键结论：世界模型服务端在不装任何加速内核的情况下也能跑**（`docs/installation.md` 明确写了 "runs without any of the kernels below"）。**首次部署应当先把四个开关全关跑通，再逐个打开**——三个内核都要源码编译 CUDA 扩展，是环境阶段耗时与失败率的主要来源。注意仓库自带的 `configs/gesim_v2.yaml` **默认四个开关全是 `true`**，照抄即用会直接撞上编译依赖。
+>
+> ⚠️ **一次实测把这条放宽了**：复现仓库 `GE-Sim-V2-tour` **只关了 `sparge_attention`**（唯一装不上的那个，`spas_sage_attn` 不在 PyPI），`liger_norm` / `liger_layernorm` / `triton_rope` 保持 `true` 并跑通了全部五个 Stage —— 完整 diff 见代码层 [`code_knowledge.md`](code_knowledge.md) **§6.1（L478–501）**，落差说明见其 **§8.4**。
+> **以哪层为准**：本节仍是更保守、更省事的默认建议；`liger-kernel` / `triton` 装得上就照实测只关一个，装不上再全关。实测踩坑见 [`troubleshooting.md`](troubleshooting.md) `Q08`（liger 缺失即 500）与 `Q09`（`spas_sage_attn`）。
 
 ### 5.5 权重下载
 
@@ -718,6 +724,7 @@ checkpoint: checkpoints/gesim_community_v2.0.1_g01op_distill_2B
 ## 6. 基本使用流程
 
 > 本章 `[CODE]` 级。命令均为仓库根目录下的相对路径，**不含任何本机绝对路径**。
+> ⭐ **只想赶紧跑起来的话，直接去速查层 [`quickstart.md`](quickstart.md) §2 运行示例（L103–197）** —— 五个 Stage 各给一条命令、预期输出、以及"结果长这样该怎么判读"。本章讲的是上游原生流程与设计意图；速查层讲的是复现仓库封装好的一键路径。要改参数则看 [`quickstart.md`](quickstart.md) §3（L198）与代码层 [`code_knowledge.md`](code_knowledge.md) §4 配置系统（L344）。
 > 遇到报错请优先查排障层 [`troubleshooting.md`](troubleshooting.md) **顶部的「快速症状索引」**（按现象查到 `Qxx`，比顺序读快得多）。
 >
 > ⚠️ **本章的接口写法有四处最容易"按 gym 惯例想当然"而出错**，实测详见 [`troubleshooting.md`](troubleshooting.md) `Q17`：`step()` 返回 **4 元组无 `done`**；`frames` 是 `(T,3,V,H,W)`，`[:,0]` 取到的是**通道轴不是视角**（要用 `head_view_frames()`）；`RewardResult` 是 **frozen dataclass**；**没有 `--model_path` 参数**（检查点写在 YAML 的 `checkpoint:`）。
@@ -817,6 +824,8 @@ python examples/closed_loop.py --server http://localhost:9000 \
 
 `WorldModelEnv(reward=...)` 可挂一个 `RewardClient`，挂上后 `step()` 才会返回逐帧 `success` 与 `progress`。**仓库不附带任何奖励模型实现**（`docs/replay.md`、`docs/closed_loop.md` 都明确写了 "No reward model is bundled"），要自己按 `docs/adding_rewards.md` 接。这意味着论文 §2.5 的 World Judge **在开源交付里是缺席的**，详见 §8.4。
 
+> ⭐ **一份自建替身的完整实现与它的两个陷阱**见代码层 [`code_knowledge.md`](code_knowledge.md) **§3.3.2（L228–246）**：它把外部 VLM 当判分器，但 ① **没设 API key 时会静默降级**为"帧间平均绝对差"的非语义启发式；② **JSON 解析失败时直接返 `0.0` 且不改 `judge_source` 字段**，在报告里与真正的 0 分**完全无法区分**。这是实测中 Stage 3 得 0 % 假阴性的 `[CODE]` 级根因（[`troubleshooting.md`](troubleshooting.md) `Q35`）。**自己接判分器时，务必让"判不出来"和"判为失败"在产物里可区分。**
+
 ## 7. 常用 API 接口
 
 > 本章全部 `[CODE]` 级，行号对应仓库快照，**行号可能随上游更新漂移**，核对方法见文末。
@@ -891,7 +900,7 @@ STATE_DIM = ACTION_DIM = 16                          # types.py:18-19
 
 | 函数 | 作用 |
 |---|---|
-| `wm_state_to_policy_state(state)`（`types.py:72-82`） | WM 布局 → 策略布局；**只有两个夹爪维在动** |
+| `wm_state_to_policy_state(state)`（`types.py:72-82`） | WM 布局 → 策略布局；**只有两个夹爪维在动**。⭐ **新写代码请用这个函数，不要手写重排** —— 一次实测的复现仓库**绕开了它**，在两个文件里各手写了一份**逐行相同**的重排（[`code_knowledge.md`](code_knowledge.md) §7.2 `S3` / §8.2），这正是教训 `L06`「一个常量被多方消费必须单点定义」的由来；用错的表现是**不报错、只是行为错**（[`troubleshooting.md`](troubleshooting.md) `Q36`） |
 | `frame_to_view_images(frame)`（`types.py:51-60`） | 一帧 `(3,V,H,W)` float → 三个 uint8 HWC 图的 dict |
 | `head_view_frames(frames)`（`types.py:63-69`） | `(T,3,V,H,W)` → head 视角 `(T,H,W,3)` uint8（喂奖励模型用） |
 
@@ -1219,14 +1228,15 @@ left, right = CompiledKinematics().fk_action(action16, head_waist4)
 
 | 文档 | 用途 |
 |---|---|
-| `quickstart.md` | ⭐ **动手前先读**：最短路径、运行示例、自检清单（⏳ 待建立） |
+| [`quickstart.md`](quickstart.md) | ⭐ **动手前先读**（✅ **已建立**，312 行）：最短路径、五个 Stage 的运行示例与预期输出、改参数、高频 8 问、自检清单 |
 | [`ai_knowledge.md`](ai_knowledge.md) | ✅ **已建立**（417 行，8 章）：复现实战复盘、`D01`–`D20` 决策、`L01`–`L08` 教训（全篇 `[实践]`） |
 | [`troubleshooting.md`](troubleshooting.md) | ✅ **已建立**（899 行）：`Q01`–`Q41` 按报错现象查的 Q&A，顶部有快速症状索引 |
-| `code_knowledge.md` | 本机复现仓库 `GE-Sim-V2-tour` 的代码视角（⏳ 待建立） |
+| [`code_knowledge.md`](code_knowledge.md) | ✅ **已建立**（708 行，8 章）：本机复现仓库 `GE-Sim-V2-tour` 的代码视角；**§7.2 十三条静默失效路径**与 **§8 四层关联映射**是本层结论的物证与反例来源 |
 | [`00-index.md`](00-index.md) | 本项目章节地图（带行号）+ `未提及` 清单 |
 
-> **原理层与实践层冲突时以哪层为准**：本文件描述的是**上游设计与文档口径**；`ai_knowledge.md` / `troubleshooting.md` 记录的是**某一次具体复现的实测**。
+> **原理层与实践层冲突时以哪层为准**：本文件描述的是**上游设计与文档口径**；`ai_knowledge.md` / `troubleshooting.md` 记录的是**某一次具体复现的实测**；`code_knowledge.md` 描述的是**那次复现的编排代码**（不是上游本体）。
 > - **API 具体写法**：以经验层/排障层为准（本文件的推断已被实测推翻过，例见 §6 章首的 `Q17` / `Q21`）。
 > - **能力边界与设计原理**：以本文件为准（实测只覆盖了它的一部分用法）。
-> - ⚠️ **版本落差**：两者核对的不是同一个检出点，**API 写法不保证跨版本通用，能力边界结论可以**。
+> - **上游被实际怎么改的**：以代码层 §6 为准（本文件 §5.4 "四个内核全关"的建议已被 §6.1 的实测放宽，两处均已就地标注）。
+> - ⚠️ **版本落差**：几层核对的不是同一个检出点，**API 写法不保证跨版本通用，能力边界结论可以**。
 

@@ -90,7 +90,7 @@ simulation-knowledge/
 |---|---|---|---|---|---|---|
 | **genie_sim_v3** | 智元 Genie Sim 3.x，OpenUSD + Isaac Sim 的评测/采集/RL 三栈仿真平台 | ⭐ [速查卡](projects/genie_sim_v3/quickstart.md) | ✅ [已完成](projects/genie_sim_v3/background_knowledge.md) | ✅ [已完成](projects/genie_sim_v3/ai_knowledge.md) | ✅ [Q01–Q29](projects/genie_sim_v3/troubleshooting.md) | ✅ [已完成](projects/genie_sim_v3/code_knowledge.md) |
 | **genesis_world** | Genesis World 通用物理平台，8 类求解器 + 3 种可换耦合器，单卡大规模并行、可微仿真、传感器缺陷建模 | ⭐ [速查卡](projects/genesis_world/quickstart.md) | ✅ [已完成](projects/genesis_world/background_knowledge.md)（v1.3.3） | ✅ [已完成](projects/genesis_world/ai_knowledge.md)（v1.2.2） | ✅ [Q01–Q37](projects/genesis_world/troubleshooting.md) | ✅ [已完成](projects/genesis_world/code_knowledge.md)（v1.2.2） |
-| **ge_sim_v2** | 智元 GE-Sim-V2，**动作条件视频生成式世界模型**（⚠️ 非物理仿真：无引擎、无渲染器、无场景文件，只出 RGB） | ⏳ 待编写 | ✅ [已完成](projects/ge_sim_v2/background_knowledge.md)（论文 v1 / 权重 v2.0.1） | ✅ [已完成](projects/ge_sim_v2/ai_knowledge.md) | ✅ [Q01–Q41](projects/ge_sim_v2/troubleshooting.md) | ⏳ 待编写 |
+| **ge_sim_v2** | 智元 GE-Sim-V2，**动作条件视频生成式世界模型**（⚠️ 非物理仿真：无引擎、无渲染器、无场景文件，只出 RGB） | ⭐ [速查卡](projects/ge_sim_v2/quickstart.md) | ✅ [已完成](projects/ge_sim_v2/background_knowledge.md)（论文 v1 / 权重 v2.0.1） | ✅ [已完成](projects/ge_sim_v2/ai_knowledge.md) | ✅ [Q01–Q41](projects/ge_sim_v2/troubleshooting.md) | ✅ [已完成](projects/ge_sim_v2/code_knowledge.md) |
 | **lw_benchhub** | 光轮 LW-BenchHub，架在 Isaac Lab + IsaacLab-Arena 之上的**薄组合层**操作 benchmark | ⭐ [速查卡](projects/lw_benchhub/quickstart.md) | ✅ [已完成](projects/lw_benchhub/background_knowledge.md) | ✅ [已完成](projects/lw_benchhub/ai_knowledge.md) | ✅ [Q01–Q38](projects/lw_benchhub/troubleshooting.md) | ✅ [已完成](projects/lw_benchhub/code_knowledge.md) |
 
 ---
@@ -100,10 +100,10 @@ simulation-knowledge/
 | 我要做的事 | 建议路径 |
 |---|---|
 | **手上有一条报错，先判断是不是已知坑** | ⭐ **`troubleshooting.md` 顶部「快速症状索引」** —— 按现象直接查到 `Qxx`（genie_sim_v3 有 **29** 条；lw_benchhub 有 **38** 条；**genesis_world 有 37 条，分 A–H 八类**；**ge_sim_v2 有 41 条，分 A–E 五类**。索引栏写的都是**逐字报错原文**，可直接 `Ctrl-F`） |
-| **把某个已复现的工具链跑起来（完整命令）** | ⭐⭐ **先看 `quickstart.md`**（三个已完成项目都有）—— 最短路径 + 自检清单；不够细再进 **`code_knowledge.md` §2「入口点与运行方式」**（容器启动、逐条 `docker exec`、环境变量总表）。**genesis_world 的入口总表列出 14 个脚本及其「必须的工作目录」——走错目录会找不到相对路径产物** |
+| **把某个已复现的工具链跑起来（完整命令）** | ⭐⭐ **先看 `quickstart.md`**（**四个项目均已具备**）—— 最短路径 + 自检清单；不够细再进 **`code_knowledge.md` §2「入口点与运行方式」**（容器启动、逐条 `docker exec`、环境变量总表）。**genesis_world 的入口总表列出 14 个脚本及其「必须的工作目录」——走错目录会找不到相对路径产物** |
 | **改代码 / 加新任务 / 改配置项** | ⭐ **`code_knowledge.md` §3 核心模块 + §4 配置系统**（含"注册新任务必改的 6 处"） |
 | **换机器或换显卡前的兼容性检查** | **`code_knowledge.md` §7.5 平台假设 + §5.5 版本约束** —— 编译期写死的 GPU 架构是最常见的坑。**lw_benchhub 额外必看 §7.1** —— 硬编码主机绝对路径散布 79 文件 326 处；**genesis_world 见 §7.1（12 文件 49 行）+ §7.3**，其中 `HF_HOME` 是在 `import torch` 之前 `os.environ[...] = ...` **硬写死**的，在 shell 里 export 无效 |
-| **"我改了代码 / 配置，但完全没生效"** | ⭐ **`code_knowledge.md` §7「代码中的注意事项」** —— 这类失败的共同形态是**静默无效**（配置照收、日志照打、行为不变）。lw_benchhub 有 **11 条已知静默失效路径**（§7.2），且仓库内**存在两份 vendored IsaacLab**，改错那份不报错也不生效（§7.3 给了判别法）；**genesis_world 见 §7.2（16 行）—— 头号坑是 `train_subprocess.py` 自带一份超参副本，改 `go2_train.py` 完全无效** |
+| **"我改了代码 / 配置，但完全没生效"** | ⭐ **`code_knowledge.md` §7「代码中的注意事项」** —— 这类失败的共同形态是**静默无效**（配置照收、日志照打、行为不变）。lw_benchhub 有 **11 条已知静默失效路径**（§7.2），且仓库内**存在两份 vendored IsaacLab**，改错那份不报错也不生效（§7.3 给了判别法）；**genesis_world 见 §7.2（16 行）—— 头号坑是 `train_subprocess.py` 自带一份超参副本，改 `go2_train.py` 完全无效**；**ge_sim_v2 见 §7.2（13 条）+ §8.5 —— 该仓库有 ≥5 组「同一常量写两遍」，改一处另一处照旧生效** |
 | 装某个仿真器 / 排装机报错 | `troubleshooting.md` §一~§三 → 详因见 `ai_knowledge.md` §4（含无效尝试）→ 再看 `background_knowledge.md` 第 5 章（安装与依赖）+ 第 8 章（已知问题） |
 | **进程像在跑但没有产出** | `troubleshooting.md` §五「看起来在跑类假象」→ 教训 `L2`（独立存活判据） |
 | **CUDA 报错 / 显存数字不合理** | `troubleshooting.md` §四（`Q12`–`Q13`）→ `ai_knowledge.md` `P08` + `L1` —— 优先怀疑 compute capability 架构不匹配，而非显存容量 |
@@ -126,19 +126,21 @@ simulation-knowledge/
 | **要引用 GE-Sim 2.0 的性能 / 榜单数字** | ⭐ **必读 `ge_sim_v2/background_knowledge.md` §8.2 五条证据矛盾** —— "100 帧/2.3 秒"实为 25 帧 × 4× 跳帧的**覆盖跨度**；"可做 RL"只见于公众号（论文列为未来工作）；"登顶 WorldArena"指活榜，且**基准论文正文 grep `GE-Sim` 命中 0**、其作者自述该分数与动作规划仅 **r=0.36** 弱相关 |
 | **部署 GE-Sim 2.0 时撞到报错** | ⭐ **`ge_sim_v2/troubleshooting.md` 快速症状索引（41 条 / A–E 五类）** —— A 网络下载、B 安装依赖、C 源码契约、D 进程资源、E 正确性与假阴性。三条最高频：**`Q09` 四个加速内核开关首次部署应全关**（`spas_sage_attn` 不在 PyPI）、**`Q11` numpy 会被重装需再锁回**、**`Q17` `WorldModelEnv` 不是 gym 接口**（四条 gym 习惯全落空） |
 | **世界模型闭环评测跑出 0 分 / 分数不合理** | ⚠️ **先做管道审计再改模型**：`ge_sim_v2/troubleshooting.md` E 类（`Q35`–`Q41`）+ `ai_knowledge.md` `L01` —— 本项目 Stage 3 的 0 % 是**假阴性**（兜底路径静默吞掉），Stage 5 的 0 才是真实测量。审计四件套：**回退计数 / 动作非退化 / 帧数对账 / 输入侧量纲**。最快一步是**把判分器的原始判词打出来读一遍**（`Q35`） |
-| **两套 16 维动作布局用混了** | `ge_sim_v2/troubleshooting.md` `Q36` + `background_knowledge.md` §7.2 —— 世界模型侧是 `[L7臂, L夹爪, R7臂, R夹爪]`，策略侧是 `[L7臂, R7臂, L夹爪, R夹爪]`，**用错不报错、只是行为错**，必须走 `types.py` 的 `wm_state_to_policy_state()` |
+| **两套 16 维动作布局用混了** | `ge_sim_v2/troubleshooting.md` `Q36` + `background_knowledge.md` §7.2 —— 世界模型侧是 `[L7臂, L夹爪, R7臂, R夹爪]`，策略侧是 `[L7臂, R7臂, L夹爪, R夹爪]`，**用错不报错、只是行为错**，必须走 `types.py` 的 `wm_state_to_policy_state()`。⚠️ **本机复现仓库绕开了这个函数**、手写了两份逐行相同的重排（`code_knowledge.md` §7.2 `S3`）—— 那是反面教材，**新写代码用上游函数** |
+| **要动手跑 GE-Sim 2.0 的五个 Stage** | ⭐⭐ **`ge_sim_v2/quickstart.md`** —— §1 三个隔离 conda 环境与环境变量（注意 **Stage 1/2/3/4 要 `no_proxy=*`、Stage 5 反过来必须走代理**）、§2 五个 Stage 的可粘命令与预期输出、§5 把 `L01` 审计拆成 4 条 shell 命令。改参数与源码位置再进 **`code_knowledge.md` §4**（本仓库**没有 `requirements.txt`/`setup.py`**，依赖只能照 §5.2 手装） |
 
 ---
 
 ## 知识库现状
 
-- **已完成（五层齐备）**：**3 个项目**
+- **已完成（五层齐备）**：**4 个项目**
   - **genie_sim_v3** —— 原理层 1694 行（9 章齐备，含传感器仿真深挖）＋ 经验层 393 行（五阶段复现复盘，18 个问题条目 / 10 个决策 / 8 条教训）＋ 排障层 605 行（`Q01`–`Q29` FAQ，按现象检索）＋ **代码层 1251 行**（对应复现仓库 `genie_sim_v3_tour`，8 章：结构 / 入口 / 核心模块 / 配置 / 依赖 / 修改点 / 注意事项 / 四层关联）＋ **速查层 385 行**
   - **lw_benchhub** —— 原理层 1478 行（9 章齐备，含 §2.6 传感器仿真 13 小节、§4.2 规模数字实测校准、§8.3 十六项已验证代码缺陷、§8.7 未找到清单）＋ 经验层 432 行（`P01`–`P38` / `D01`–`D18` / `L01`–`L08`）＋ 排障层 864 行（`Q01`–`Q38`，5 组，带快速症状索引与贡献指南）＋ **代码层 952 行**（对应复现仓库 `lw_benchhub_tour`；`[CODE]`×72 / `[实践]`×15 / `[推断]`×8；含 **11 处 monkey patch 全表**（上游 10 + 本地新增 1）、**两份 vendored IsaacLab 的判别法**、**11 条静默失效路径**、22 行 `Qxx`→机制映射）＋ **速查层 403 行**（3 个带预期输出的运行示例）
   - **genesis_world** —— **原理层 1205 行**（9 章齐备，核对上游 v1.3.3 / HEAD `19f56d6`；含 §2.5 传感器仿真 7 小节、§3.1「四层栈 vs 仓库实际内容」的 Nyx 零命中证据、§5.3 六处依赖 pin 逐条溯因、§8.1 十五条 `[CODE]` 级限制、§8.4 九项未提及清单）＋ **经验层 362 行**（`P01`–`P37` / `D01`–`D20` / `L01`–`L08`；四条技术路线：VLA 闭环 ❌ 0/8、G1+PI0 ⚠️ 仅计划、Go2 PPO ✅、多物理耦合 ✅）＋ **排障层 902 行**（`Q01`–`Q37`，A–H 八类，带 37 行快速症状索引与贡献指南）＋ **代码层 570 行**（对应复现仓库 `genesis-world-tour`，8 章；含 14 个入口的 `文件:行号` 总表、16 行静默失效清单、12 文件/49 行硬编码路径脱敏清单、§8 四张跨层映射表）＋ **速查层 260 行**（3 组带预期输出的运行示例 + 自检清单）。五层交叉引用已闭环。
     ⚠️ **版本落差**：原理层核对 **1.3.3**，其余四层实测于 **1.2.2** —— 后四层的 API 写法不可直接套用到新版本，但能力边界结论（IPC 需额外装 `pyuipc`、无 IPC 时 FEM 不做刚-柔接触、相机无噪声字段、`build()` 不可逆）两边一致
-- **进行中（已有三层：原理层 + 经验层 + 排障层）**：**1 个项目**
-  - **ge_sim_v2** —— **原理层 1232 行**（9 章齐备，核对论文 arXiv:2605.27491v1 + 上游仓库快照 + HF 权重 `community v2.0.1`；含 **§2.7 传感器仿真专项 6 小节**（结论：**只有 RGB**，深度/LiDAR/IMU/力矩/触觉/音频/分割全部未提及，且范式上不存在显式噪声模型）、**§8.2 五条证据矛盾**（宣传口径与论文/代码的逐条比对）、§8.3 能力边界表、§8.4 论文与开源交付落差、§8.5 十五条工程注意事项）＋ **经验层 417 行**（`P01`–`P41` / `D01`–`D20` / `L01`–`L08`；五阶段：环境部署 → Real2Edit2Real 数据生成 → 世界模型闭环评测 → 离线过滤式 BC/RWR → RoboColiseum 线上接入）＋ **排障层 899 行**（`Q01`–`Q41`，A–E 五类，带 41 行快速症状索引与贡献指南）。⚠️ **论文 v1 与发布权重 v2.0.1 不是同一交付物**。
+  - **ge_sim_v2** —— **原理层 1242 行**（9 章齐备，核对论文 arXiv:2605.27491v1 + 上游仓库快照 + HF 权重 `community v2.0.1`；含 **§2.7 传感器仿真专项 6 小节**（结论：**只有 RGB**，深度/LiDAR/IMU/力矩/触觉/音频/分割全部未提及，且范式上不存在显式噪声模型）、**§8.2 五条证据矛盾**（宣传口径与论文/代码的逐条比对）、§8.3 能力边界表、§8.4 论文与开源交付落差、§8.5 十五条工程注意事项）＋ **经验层 441 行**（`P01`–`P41` / `D01`–`D20` / `L01`–`L08`；五阶段：环境部署 → Real2Edit2Real 数据生成 → 世界模型闭环评测 → 离线过滤式 BC/RWR → RoboColiseum 线上接入）＋ **排障层 899 行**（`Q01`–`Q41`，A–E 五类，带 41 行快速症状索引与贡献指南）。⚠️ **论文 v1 与发布权重 v2.0.1 不是同一交付物**。
     **实践层三条最贵的结论**：① **推理吞吐 0.88 帧/s ≈ 0.055× 实时** —— 它做不了在线 RL 的数据引擎，只适合离线批量 rollout；② **Stage 3 的 0 % 成功率是假阴性**（兜底路径静默吞掉动作），`L01`「下结论前先审计管道」是本项目最贵的一条教训；③ **RWR 把过滤式 BC 从 30 % 拉到 80 %**（在世界模型自采数据上），但**判分器是自己补的 MiMo 替身，不是官方 World Judge**。
-    ⏳ 待编写：**代码层**（对应 `GE-Sim-V2-tour/`，源料 `sources/ge_sim_v2/extract_repo.md` 已就绪）→ **速查层**
-- **下一步建议**：为 **ge_sim_v2** 补齐代码层 → 速查层。每篇完成后同步更新本文件、`projects/00-index.md` 与该项目 `00-index.md` 三处
+    **代码层 708 行**（对应复现仓库 `GE-Sim-V2-tour`，8 章；描述对象是**薄编排层**约 8.8 k 行、**零模型代码**，上游 `gesim` 子模块只改一行；含 **13 条静默失效路径**、**≥5 组重复定义常量**、三个隔离 conda 环境与**逐 Stage 相反的代理策略**、§8 五张跨层映射表）＋ **速查层 312 行**（5 个 Stage 的运行示例 + 把 `L01` 审计拆成 4 条可直接粘的命令 + 6 条交付口径检查）。五层交叉引用已闭环。
+    ⚠️ **代码层最反常的一条**：教训 `L06`（常量必须单点定义）**在产出这条教训的同一个仓库里被违反了至少四次** —— 本知识库少见的「教训与反例同时留档」，见 `code_knowledge.md` §8.2。
+    ⚠️ **两处已就地标注的跨层冲突**：① 原理层 §5.4 建议「四个加速内核全关」，实测只关了 `sparge_attention` 一个也能全程跑通（以代码层 §6.1 为准）；② 两套 16 维布局转换请用上游 `wm_state_to_policy_state()`，**不要**照抄本仓库手写的两份重排（以原理层 §7.2 为准）。
+- **下一步建议**：四个项目均已五层齐备。新增项目时按 `CLAUDE.md` 的写入约定推进，每篇完成后同步更新本文件、`projects/00-index.md` 与该项目 `00-index.md` 三处
