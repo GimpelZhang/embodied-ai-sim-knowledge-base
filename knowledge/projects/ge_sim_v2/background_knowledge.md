@@ -1338,7 +1338,7 @@ in_channels: 32  # 16 (vae) + 3 (traj) + 6 (raymap) + 1 (padding mask) + depth (
 - **`board` 是四元闭集** `instruction` / `spatial` / `manip` / `robust`，服务端三处校验。传错值返回 `400 invalid board`（或 `400 no task templates for board`）**并照扣配额**；**4xx 是语义拒绝，不要重试**。
 - **一次提交 = 一个 board = 一个 job**，所以跑满四个榜要提交四次。
 - **配额**：skill 文档写 **4 次/天**、北京时间午夜（UTC+8）重置 `[SKILL]`；但**本次两轮独立实测 `GET /submission/quota` 均返回 `limit: 99` 总量口径** `[实践]`（§9.3.5 漂移表第 4 行）。**以实测为准，但仍按"提交昂贵"操作**。
-- **分数语义：skill 文档说是"和"，实测是"均值"** —— 文档写 `task total = 各 episode 之和`、`job total = 各 task total 之和` `[SKILL]`；而实测 manip 十任务分数之和 6.04、平台报 **0.604**，instruction 之和 7.46、平台报 **0.745**，**除以任务数后与平台报数精确吻合（误差 ≤0.001）** `[实践]`（`P42`）。**引用总分语义时以实测的"均值"为准**；跨 board 比较仍只在同一 board 内有意义。`genie_sim_v3` §3.5 记录的 0–1 成功率与该均值同量纲。
+- **分数语义：skill 文档说是"和"，实测是"均值"** —— 文档写 `task total = 各 episode 之和`、`job total = 各 task total 之和` `[SKILL]`；而实测 manip 十任务分数之和 6.04、平台报 **0.604**，instruction 之和 7.46、平台报 **0.745**，**除以任务数后与平台报数精确吻合（误差 ≤0.001）** `[推算]`（`P42`）—— ⚠️ 这是**从两组数字反推**，平台从未公布算法；且两个样本恰好都是 10 任务，故"除以任务数"与"除以 10"**无法区分**，**不要反向用它还原分项和**（见 `troubleshooting.md` `Q42`）。**引用总分语义时以实测的"均值"为准**；跨 board 比较仍只在同一 board 内有意义。`genie_sim_v3` §3.5 记录的 0–1 成功率与该均值同量纲。
 - **榜单按 board 分列、没有全局总榜**，每行是某用户在该 board 上的最好一次 job；**响应里没有 `rank_change` 字段，不要编造排名变化**。
 - 状态机：文档写 `Pending / Queued / Running / Finished / Failed / Cancelled` `[SKILL]`，**实测在 agent 连上后还有一个 `evaluating` 态、终态是 `completed`/`failed`** `[实践]`（`P38`）——轮询器的 ACTIVE 集合漏掉 `evaluating` 会**把正在跑的 job 误判为终态**。失败日志是容器 stdout/stderr + exit code，定位顺序为"最终 exit_code → 最后一段完整 Traceback → 周围约 20 行 stderr"。
 
@@ -1403,8 +1403,8 @@ in_channels: 32  # 16 (vae) + 3 (traj) + 6 (raymap) + 1 (padding mask) + depth (
 |---|---|
 | [`quickstart.md`](quickstart.md) | ⭐ **动手前先读**（✅ **已建立**，312 行）：最短路径、五个 Stage 的运行示例与预期输出、改参数、高频 8 问、自检清单 |
 | [`ai_knowledge.md`](ai_knowledge.md) | ✅ **已建立**（469 行，8 章）：复现实战复盘、`P01`–`P45` 问题、`D01`–`D20` 决策、`L01`–`L09` 教训（全篇 `[实践]`）。**§4.6 F 类是「平台契约与判分口径」专章** |
-| [`troubleshooting.md`](troubleshooting.md) | ✅ **已建立**（974 行）：`Q01`–`Q45` 按报错现象查的 Q&A，顶部有快速症状索引（F 类 `Q42`–`Q45` 是平台契约与判分口径） |
-| [`code_knowledge.md`](code_knowledge.md) | ✅ **已建立**（743 行，8 章）：本机复现仓库 `GE-Sim-V2-tour` 的代码视角；**§7.2 十三条静默失效路径**与 **§8 四层关联映射**是本层结论的物证与反例来源 |
+| [`troubleshooting.md`](troubleshooting.md) | ✅ **已建立**（975 行）：`Q01`–`Q45` 按报错现象查的 Q&A，顶部有快速症状索引（F 类 `Q42`–`Q45` 是平台契约与判分口径） |
+| [`code_knowledge.md`](code_knowledge.md) | ✅ **已建立**（744 行，8 章）：本机复现仓库 `GE-Sim-V2-tour` 的代码视角；**§7.2 十三条静默失效路径**与 **§8 四层关联映射**是本层结论的物证与反例来源 |
 | [`00-index.md`](00-index.md) | 本项目章节地图（带行号）+ `未提及` 清单 |
 
 > **原理层与实践层冲突时以哪层为准**：本文件描述的是**上游设计与文档口径**；`ai_knowledge.md` / `troubleshooting.md` 记录的是**某一次具体复现的实测**；`code_knowledge.md` 描述的是**那次复现的编排代码**（不是上游本体）。

@@ -100,8 +100,8 @@ Genesis AI 出品的通用具身智能仿真平台（前身是 2024-12 的学术
 - **版本**：核对于论文 **arXiv:2605.27491v1**（2026-05-26）+ 上游仓库快照 + HF 权重 `agibot-world/Genie-Envisioner-Sim-v2.0`（`community v2.0.1`）。⚠️ **论文 v1 与发布权重不是同一交付物**，论文数字不必然在发布权重上复现
 - **background 文档**：[`ge_sim_v2/background_knowledge.md`](ge_sim_v2/background_knowledge.md)（**1414 行**，9 章齐备，含 **§2.7 传感器仿真专项 6 小节**、**§8.2 五条证据矛盾**、**§8.5 18 条实践修正**，以及 **§9.2 Real2Edit2Real 专节**与 **§9.3 RoboColiseum 平台专节（6 小节，含口径漂移表）**）
 - **ai_knowledge 文档**：[`ge_sim_v2/ai_knowledge.md`](ge_sim_v2/ai_knowledge.md)（**469 行**，8 章齐备；`P01`–`P45` / `D01`–`D20` / `L01`–`L09`；⭐ 新增 **§4.6 F 类「契约与口径」故障**）
-- **troubleshooting 文档**：[`ge_sim_v2/troubleshooting.md`](ge_sim_v2/troubleshooting.md)（**974 行**，`Q01`–`Q45`，A–F **六类**，带 45 行快速症状索引与贡献指南）
-- **code_knowledge 文档**：[`ge_sim_v2/code_knowledge.md`](ge_sim_v2/code_knowledge.md)（**743 行**，8 章齐备；描述对象是本机复现仓库 `GE-Sim-V2-tour/`，**不是上游本体**；含 **13 条静默失效路径**、§8 五张跨层映射表，以及 ⭐ **§3.6.1 线上评测隧道的线路层参数** —— 该二进制分帧协议**在平台文档里是 `未提及` 的，本库是唯一成文来源**）
+- **troubleshooting 文档**：[`ge_sim_v2/troubleshooting.md`](ge_sim_v2/troubleshooting.md)（**975 行**，`Q01`–`Q45`，A–F **六类**，带 45 行快速症状索引与贡献指南）
+- **code_knowledge 文档**：[`ge_sim_v2/code_knowledge.md`](ge_sim_v2/code_knowledge.md)（**744 行**，8 章齐备；描述对象是本机复现仓库 `GE-Sim-V2-tour/`，**不是上游本体**；含 **13 条静默失效路径**、§8 五张跨层映射表，以及 ⭐ **§3.6.1 线上评测隧道的线路层参数** —— 该二进制分帧协议**在平台文档里是 `未提及` 的，本库是唯一成文来源**）
 - **quickstart 文档**：⭐ [`ge_sim_v2/quickstart.md`](ge_sim_v2/quickstart.md)（**312 行**，5 章：环境准备 / 五个 Stage 的运行示例 / 改关键参数 / 高频 8 条 / 自检清单；**派生层，不含新事实**）
 - **项目内索引**：[`ge_sim_v2/00-index.md`](ge_sim_v2/00-index.md) ← **先读这个拿行号**
 - **⚠️ 定位提醒**：**这不是传统物理仿真器**，而是**动作条件视频生成式世界模型**。**没有物理引擎、没有渲染器、没有场景文件**，不能增删物体、不能换本体、不能改相机（三视角 head/left_wrist/right_wrist 固定，384×512）。它用神经网络生成替代了物理解算 + 渲染，与本库其他三个项目属于不同范式，**选型时勿等价对待**。
