@@ -1052,6 +1052,10 @@ python -c "import genesis as gs; print([x for x in dir(gs.sensors) if not x.star
 ## 8. 已知问题与限制
 
 > 本章按**证据等级**分三组。`[CODE]` 组是可在仓库里自行验证的硬事实，做工程决策只信这一组。
+>
+> 🔧 **本章列的是「代码里能查到的限制」，不是「实际用起来会遇到的报错」。**
+> 实际使用中可能遇到的问题（CUDA 环境变量拼接损坏、`Scene is already built.`、IK 返回完整 qpos、rsl-rl 的 0-based checkpoint 编号、PBD 实体不支持 `get_contacts()`、SPH 步长上限……）共 **37 条**，按报错现象分类整理在 **[排障层 `troubleshooting.md`](./troubleshooting.md)** 的「快速症状索引」；其成因与排查过程见 **[经验层 `ai_knowledge.md`](./ai_knowledge.md) §4**。
+> ⚠️ 那两层实测于 **1.2.2**，本章描述 **1.3.3** —— 具体写法不可互相套用，但**能力边界类结论**（如 IPC 需额外安装、FEM 无 IPC 时不做刚-柔接触、相机无噪声字段）两边一致。
 
 ### 8.1 `[CODE]` 级 —— 可在仓库中直接验证
 
@@ -1173,14 +1177,15 @@ python -c "import genesis as gs; print([x for x in dir(gs.sensors) if not x.star
 
 ### 9.5 本知识库内的关联文档
 
-> 📌 **当前状态**：本项目目前只有**原理层**（本文档）与索引。其余四层正在编写中，下表中标 ⏳ 的文档**尚未存在**，链接暂时是死链。
+> 📌 **当前状态**：原理层（本文档）、经验层、排障层与索引均已就绪；速查层与代码层仍在编写中，下表中标 ⏳ 的文档**尚未存在**，链接暂时是死链。
+> ⚠️ **版本落差**：本文档描述 **1.3.3**，而经验层与排障层实测于 **1.2.2** —— 后两者的具体命令与 API 写法**不可直接套用到新版本**。
 
 | 层 | 文档 | 什么时候看 |
 |---|---|---|
 | ⏳ 速查层 | `quickstart.md` | **要动手跑**，想不起命令 |
 | ✅ 原理层 | 本文档 | 查 API / 参数 / 设计原理 / 能力边界 |
-| ⏳ 经验层 | `ai_knowledge.md` | 想知道**为什么会这样**、试过哪些无效方法 |
-| ⏳ 排障层 | `troubleshooting.md` | **手上有一条具体报错** |
+| ✅ 经验层 | [`ai_knowledge.md`](./ai_knowledge.md) | 想知道**为什么会这样**、试过哪些无效方法（8 章 / `P01`–`P37` / `D01`–`D20` / `L01`–`L08`） |
+| ✅ 排障层 | [`troubleshooting.md`](./troubleshooting.md) | **手上有一条具体报错** → 顶部「快速症状索引」（`Q01`–`Q37`，8 类） |
 | ⏳ 代码层 | `code_knowledge.md` | 要改**复现仓库 `genesis-world-tour`** 的代码 |
 | ✅ 索引 | [`00-index.md`](./00-index.md) | 带行号的章节地图 + `未提及` 清单 |
 

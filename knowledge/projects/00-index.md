@@ -11,7 +11,7 @@
 | 项目 slug | 名称 / 上游 | 开发方 | 状态 | ⭐ quickstart（速查层） | background（原理层） | ai_knowledge（经验层） | troubleshooting（排障层） | code_knowledge（代码层） | 项目内索引 |
 |---|---|---|---|---|---|---|---|---|---|
 | `genie_sim_v3` | Genie Sim 3.x (`AgibotTech/genie_sim`) | 智元机器人 AgiBot | ✅ 已完成 | [`quickstart.md`](genie_sim_v3/quickstart.md) | [`background_knowledge.md`](genie_sim_v3/background_knowledge.md) | [`ai_knowledge.md`](genie_sim_v3/ai_knowledge.md) | [`troubleshooting.md`](genie_sim_v3/troubleshooting.md) | [`code_knowledge.md`](genie_sim_v3/code_knowledge.md) | [`00-index.md`](genie_sim_v3/00-index.md) |
-| `genesis_world` | Genesis World (`Genesis-Embodied-AI/genesis-world`) | Genesis Embodied AI | 🔨 编写中（原理层已完成） | — | [`background_knowledge.md`](genesis_world/background_knowledge.md) | — | — | — | [`00-index.md`](genesis_world/00-index.md) |
+| `genesis_world` | Genesis World (`Genesis-Embodied-AI/genesis-world`) | Genesis Embodied AI | 🔨 编写中（**原理 / 经验 / 排障 三层已完成**） | — | [`background_knowledge.md`](genesis_world/background_knowledge.md) | [`ai_knowledge.md`](genesis_world/ai_knowledge.md) | [`troubleshooting.md`](genesis_world/troubleshooting.md) | — | [`00-index.md`](genesis_world/00-index.md) |
 | `ge_sim_v2` | GE-Sim-V2 (`AgibotTech/GE-Sim-V2`) | 智元机器人 AgiBot | ⏳ 待编写 | — | — | — | — | — | — |
 | `lw_benchhub` | LW-BenchHub (`LightwheelAI/LW-BenchHub`) | 光轮智能 Lightwheel | ✅ 已完成（五层齐备） | [`quickstart.md`](lw_benchhub/quickstart.md) | [`background_knowledge.md`](lw_benchhub/background_knowledge.md) | [`ai_knowledge.md`](lw_benchhub/ai_knowledge.md) | [`troubleshooting.md`](lw_benchhub/troubleshooting.md) | [`code_knowledge.md`](lw_benchhub/code_knowledge.md) | [`00-index.md`](lw_benchhub/00-index.md) |
 
@@ -62,11 +62,12 @@
 
 - **开发方**：Genesis Embodied AI（Genesis AI）
 - **版本**：核对于 **v1.3.3**（HEAD `19f56d6`，2026-08-30），许可证 **Apache 2.0**；PyPI 包名 `genesis-world`，import 名 `genesis`，惯用别名 `gs`
-- **background 文档**：[`genesis_world/background_knowledge.md`](genesis_world/background_knowledge.md)（1197 行，9 章齐备，含 §2.5 传感器仿真 7 小节）
-- **ai_knowledge 文档**：⏳ 待编写
-- **troubleshooting 文档**：⏳ 待编写
+- **background 文档**：[`genesis_world/background_knowledge.md`](genesis_world/background_knowledge.md)（**1202 行**，9 章齐备，含 §2.5 传感器仿真 7 小节）· 核对 **v1.3.3**
+- **ai_knowledge 文档**：[`genesis_world/ai_knowledge.md`](genesis_world/ai_knowledge.md)（**347 行**，8 章齐备；`P01`–`P37` / `D01`–`D20` / `L01`–`L08`）· 实测 **v1.2.2**
+- **troubleshooting 文档**：[`genesis_world/troubleshooting.md`](genesis_world/troubleshooting.md)（**901 行**，`Q01`–`Q37`，A–H 八类，顶部有 37 行快速症状索引）· 实测 **v1.2.2**
 - **code_knowledge 文档**：⏳ 待编写（对应复现仓库 `genesis-world-tour/`）
 - **quickstart 速查卡**：⏳ 待编写
+- ⚠️ **版本落差**：原理层是 **1.3.3**，经验层/排障层实测于 **1.2.2** —— **API 写法不可跨版本套用，能力边界结论可以**（见 `ai_knowledge.md` §1.3）
 - **项目内索引**：[`genesis_world/00-index.md`](genesis_world/00-index.md) ← **先读这个拿行号**
 
 **简短总结**
@@ -78,10 +79,13 @@ Genesis AI 出品的通用具身智能仿真平台（前身是 2024-12 的学术
 **五个"别踩"提醒**（详见项目内索引末尾）
 ① **别以为装了 `genesis-world` 就有 Nyx 渲染**（零命中，要 `pip install gs-nyx`）；② **别以为传感器默认带噪声**（全部默认 `0.0`，相机连字段都没有）；③ **别在 `build()` 之后想加实体/传感器/相机**（不可逆分界线）；④ **别凭直觉升级依赖** —— 6 处 pin（`trimesh`/`libigl`/`pyglet`/`z3-solver`/`Pillow`/`pygltflib`）各对应一个已知上游破坏，`quadrants==1.3.0` 是精确 pin，装 `[dev]` 会把 mujoco 从 `>=3.2.5` 收紧到 `>=3.10,<3.11`，**且 PyTorch 不在依赖里必须先单独装**；⑤ **别把博客数字当工程依据**（103× / 4.6× / Pearson 0.8996 全是 `[官网]` 级，sim-real 评测套件未开源；速度类可自测 `examples/speed_benchmark/`、`tests/benchmarks/`）。另有 **15 条 `[CODE]` 级限制**与 **9 项 `未提及` 清单**见 `background_knowledge.md` §8.1 / §8.4。
 
+**复现结局速查**（引用经验层前先看这个）：Stage 1/2 **OpenVLA 抓取闭环 ❌ 0/8**，最终在机制层面证明"当前目标不可达"并主动止损；Patch 01/02（G1 + PI0/Pi0.5）⚠️ **只有计划、无任何执行记录**；Stage 3 **Go2 PPO ✅ 完整跑通**（2048 envs / 151,839 steps·s⁻¹ / 100 epoch ≈ 8 min）；Stage 4 **刚柔·刚流耦合 ✅ 三个 demo 全出**。
+
 **本机相关资源**（均已 gitignore，仅本地有效）
 - 源料：`sources/genesis_world/background.txt`（上游仓库 + readthedocs 用户指南 + 官方 blog）、`Genesis_world_01.txt`（第三方技术分析，`[文章]` 级）、`Genesis_world_02.txt`（官方博客译文，`[官网]` 级）
 - 上游仓库克隆：`sources/genesis_world/genesis-upstream/` ← **`[CODE]` 级证据都在这里核实**
 - 复现原始记录：`sources/genesis_world/genesis-world-tour.md`（16471 行）
+- 关键事件提炼：`sources/genesis_world/key_events_summary.md`（35 条 `E01`–`E35`，317 行）← 经验层的直接输入
 - 实战复现仓库：`genesis-world-tour/`（33 文件；Stage1 OpenVLA 闭环 / Stage2 场景工厂+批量评测 / Stage3 Go2 PPO / Stage4 多物理）
 
 ---
