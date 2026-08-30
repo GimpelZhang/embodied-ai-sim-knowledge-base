@@ -12,7 +12,7 @@
 |---|---|---|---|---|---|---|---|---|---|
 | `genie_sim_v3` | Genie Sim 3.x (`AgibotTech/genie_sim`) | 智元机器人 AgiBot | ✅ 已完成 | [`quickstart.md`](genie_sim_v3/quickstart.md) | [`background_knowledge.md`](genie_sim_v3/background_knowledge.md) | [`ai_knowledge.md`](genie_sim_v3/ai_knowledge.md) | [`troubleshooting.md`](genie_sim_v3/troubleshooting.md) | [`code_knowledge.md`](genie_sim_v3/code_knowledge.md) | [`00-index.md`](genie_sim_v3/00-index.md) |
 | `genesis_world` | Genesis World (`Genesis-Embodied-AI/genesis-world`) | Genesis Embodied AI | ✅ 已完成（五层齐备） | [`quickstart.md`](genesis_world/quickstart.md) | [`background_knowledge.md`](genesis_world/background_knowledge.md) | [`ai_knowledge.md`](genesis_world/ai_knowledge.md) | [`troubleshooting.md`](genesis_world/troubleshooting.md) | [`code_knowledge.md`](genesis_world/code_knowledge.md) | [`00-index.md`](genesis_world/00-index.md) |
-| `ge_sim_v2` | GE-Sim-V2 (`AgibotTech/GE-Sim-V2`) | 智元机器人 AgiBot | ⏳ 待编写 | — | — | — | — | — | — |
+| `ge_sim_v2` | GE-Sim-V2 (`AgibotTech/GE-Sim-V2`) | 智元机器人 AgiBot | 🟡 原理层已完成 | — | [`background_knowledge.md`](ge_sim_v2/background_knowledge.md) | — | — | — | [`00-index.md`](ge_sim_v2/00-index.md) |
 | `lw_benchhub` | LW-BenchHub (`LightwheelAI/LW-BenchHub`) | 光轮智能 Lightwheel | ✅ 已完成（五层齐备） | [`quickstart.md`](lw_benchhub/quickstart.md) | [`background_knowledge.md`](lw_benchhub/background_knowledge.md) | [`ai_knowledge.md`](lw_benchhub/ai_knowledge.md) | [`troubleshooting.md`](lw_benchhub/troubleshooting.md) | [`code_knowledge.md`](lw_benchhub/code_knowledge.md) | [`00-index.md`](lw_benchhub/00-index.md) |
 
 **四类文档的分工**（按"手上有什么"选）：
@@ -94,16 +94,28 @@ Genesis AI 出品的通用具身智能仿真平台（前身是 2024-12 的学术
 
 ## 3. ge_sim_v2 — GE-Sim-V2
 
-- **开发方**：智元机器人（AgibotTech）
-- **background 文档**：⏳ 未编写
-- **⚠️ 定位提醒**：**这不是传统物理仿真器**，而是**视频扩散生成式世界模型（Neural World Model）**。它没有物理引擎、不解算接触力，"仿真"是由模型直接生成下一帧观测。与本库其他三个项目属于不同范式，选型时勿等价对待。
-- **简短总结（来自源料与实战仓库，尚未经 `[CODE]` 级核验）**
-  以视频扩散世界模型承载 VLA 闭环评测；配合 Real2Edit2Real 的 3D 场景编辑管线做场景衍生与空间泛化评测，可在世界模型内部做 RL 自我进化，并对接 world-arena / RoboColiseum 线上盲测榜单。本机实战覆盖五阶段：单场景闭环（GE-Sim 2.0 + π₀.₅ + MiMo World Judge）、批量数据衍生、大规模空间泛化评测、世界模型内 RL、第三方线上盲测。
-- **关键标签**
-  `世界模型` `视频扩散` `VLA闭环` `评测基准` `场景编辑生成` `Real2Sim` `强化学习训练` `线上榜单盲测` `非物理引擎`
-- **本机相关资源**
-  - 源料：`sources/ge_sim_v2/background.txt`（4 篇 arXiv + 项目主页 + 上游仓库 + Real2Edit2Real + world-arena + robocoliseum）、`GE-Sim_v2_中文介绍.txt`
-  - 实战复现仓库：`GE-Sim-V2-tour/`
+- **开发方**：智元机器人（AgibotTech）+ 北航 / LV-NUS / 天大（15 作者）
+- **版本**：核对于论文 **arXiv:2605.27491v1**（2026-05-26）+ 上游仓库快照 + HF 权重 `agibot-world/Genie-Envisioner-Sim-v2.0`（`community v2.0.1`）。⚠️ **论文 v1 与发布权重不是同一交付物**，论文数字不必然在发布权重上复现
+- **background 文档**：[`ge_sim_v2/background_knowledge.md`](ge_sim_v2/background_knowledge.md)（**1211 行**，9 章齐备，含 **§2.7 传感器仿真专项 6 小节**与 **§8.2 五条证据矛盾**）
+- **ai_knowledge / troubleshooting / code_knowledge / quickstart**：⏳ 待编写（源料 `GE-Sim-V2-tour-docs.md` 11917 行已就绪）
+- **项目内索引**：[`ge_sim_v2/00-index.md`](ge_sim_v2/00-index.md) ← **先读这个拿行号**
+- **⚠️ 定位提醒**：**这不是传统物理仿真器**，而是**动作条件视频生成式世界模型**。**没有物理引擎、没有渲染器、没有场景文件**，不能增删物体、不能换本体、不能改相机（三视角 head/left_wrist/right_wrist 固定，384×512）。它用神经网络生成替代了物理解算 + 渲染，与本库其他三个项目属于不同范式，**选型时勿等价对待**。
+
+**简短总结**
+给它一张首帧 + 一条动作轨迹，它生成机器人执行该动作的三视角视频（Cosmos-Predict2-2B DiT + 流匹配，分块自回归 + 稀疏记忆），并**额外解码出 16 维本体感觉状态**、**用内置 World Judge 给出成功概率** —— 后两项是它相对同类世界模型近乎独占的能力。关键设计是 **Pose2Image + Camera Raymap 条件化**：把末端位姿渲染成 3 通道图、把相机光线场编码成 6 通道图，在隐空间与噪声潜变量拼接，从而把 TI2V 底座改造成动作条件模型（腕部相机因视角随臂运动，**必须**靠 raymap 才能对齐）。DMD2 蒸馏到 **4 步采样**，单张 H100 上 **25 帧 / 2.3 秒**。**但开源是"可用的推理发行版"而非"可复现的研究发行版"**：推理模型实现（约 8200 行，占全仓 72%）与蒸馏权重已发布，**训练/蒸馏代码、非蒸馏权重、World Judge 奖励模型、机器人 URDF 全部缺席** —— 直接后果是**开箱即用时 `reward` 与 `progress` 恒为 `None`**，论文主打的"自带可验证奖励"需自行补齐（本机实战用小米 MiMo 做替身评判器）。**传感器侧只有 RGB**：深度 / LiDAR / IMU / 力矩 / 触觉 / 音频 / 分割**全部未提及**，也没有任何显式噪声模型 —— 在此范式下噪声是要抑制的**对手**，不是可配置的特性。
+
+**关键标签**
+`世界模型` `视频扩散` `非物理引擎` `VLA闭环` `评测基准` `线上榜单盲测` `双臂操作`
+
+**三个"别踩"提醒**（详见项目内索引与 `background_knowledge.md` §8）
+① **别把它当仿真器问"物理上会不会成功"** —— 它只回答"看起来会怎么动"（§2.1 / §8.3）；② **别直接引用宣传数字** —— "100 帧/2.3 秒"实为 25 帧 × 4× 跳帧的**覆盖跨度**（矛盾 1）、"可做 RL"只见于公众号而论文列为**未来工作**（矛盾 2）、"登顶 WorldArena"指活榜且**基准论文正文 grep `GE-Sim` 命中 0**、该基准作者自述其分数与动作规划仅 **r=0.36** 弱相关（矛盾 5）；③ **别忽略两套 16 维布局** —— 世界模型侧是 `[L7臂, L夹爪, R7臂, R夹爪]`，策略侧是 `[L7臂, R7臂, L夹爪, R夹爪]`，用错**不报错只是行为错**（§7.2，最高频静默错误）。另：配置默认把四个加速内核开关全开，**但内核需源码编译，首次部署应全关**（§5.4）。
+
+**本机相关资源**（均已 gitignore，仅本地有效）
+- 源料：`sources/ge_sim_v2/background.txt`（8 个 URL：论文 / 项目页 / 上游仓库 / WorldArena 论文与榜单 / Real2Edit2Real 仓库与论文 / RoboColiseum）、`GE-Sim_v2_中文介绍.txt`（公众号，`[文章]` 级，**口径与论文冲突**）
+- 论文纯文本：`sources/ge_sim_v2/_web/{2605.27491,2602.08971,2512.19402}.txt`（GE-Sim 2.0 / WorldArena / Real2Edit2Real）
+- 上游仓库克隆：`sources/ge_sim_v2/GE-Sim-V2/`（142 文件）← **`[CODE]` 级证据在这里核实**；周边 `sources/ge_sim_v2/Real2Edit2Real/`（121 文件）
+- 复现原始记录：`sources/ge_sim_v2/GE-Sim-V2-tour-docs.md`（11917 行；✅ 已扫描无真实凭据，⚠️ 含约 300 处主机绝对路径，摘写时必须脱敏）
+- 实战复现仓库：`GE-Sim-V2-tour/` ← 代码层的描述对象
 
 ---
 
@@ -153,8 +165,8 @@ Lightwheel 出品的机器人操作 benchmark，本质是**架在 Isaac Lab + Is
 | **可微分仿真**（梯度回传到物理量） | `genesis_world` | 四者中唯一提供 —— `SimOptions(requires_grad=True)` + `scene.backward(loss)`。⚠️ 硬约束 `substeps_local % substeps == 0`，显存随 `substeps_local` 线性增长，很容易 OOM |
 | **触觉 / 激光雷达 / IMU 噪声**建模 | `genesis_world` | 四者中唯一有成体系的传感器缺陷层。⚠️ 但**默认全为 `0.0`，必须显式配置**；**相机不在噪声层**（`Camera` 直接派生自 `Sensor`） |
 | 已在 **lerobot / IsaacLab** 生态里，想少改代码 | `lw_benchhub` | 直接复用 IsaacLab-Arena + lerobot 数据与策略接口 |
-| 想**跳过物理**、只做视觉级泛化与快速衍生 | `ge_sim_v2` | 生成式世界模型，无物理解算 |
-| **传感器保真度**要求高（深度/LiDAR/IMU 噪声） | ⚠️ 四者都要先查缺口；相对最好的是 `genesis_world` | **`genesis_world` 有完整的两层缺陷模型**（`delay`/`jitter` + `resolution`/`bias`/`noise`/`random_walk`，IMU 有 3×5 矩阵），**但默认全 `0.0` 且相机无噪声层**；genie_sim_v3 已确认仅 RGB 有噪声模型；**`lw_benchhub` 已确认最弱 —— 只有 RGB，且无任何噪声模型**；ge_sim_v2 未核验 |
+| 想**跳过物理**、只做视觉级泛化与快速衍生 | `ge_sim_v2` | 生成式世界模型，无物理解算；⚠️ 只出 RGB，且**开箱即用无奖励信号**（`reward`/`progress` 恒 `None`） |
+| **传感器保真度**要求高（深度/LiDAR/IMU 噪声） | ⚠️ 四者都要先查缺口；相对最好的是 `genesis_world` | **`genesis_world` 有完整的两层缺陷模型**（`delay`/`jitter` + `resolution`/`bias`/`noise`/`random_walk`，IMU 有 3×5 矩阵），**但默认全 `0.0` 且相机无噪声层**；genie_sim_v3 已确认仅 RGB 有噪声模型；**`lw_benchhub` 已确认最弱 —— 只有 RGB，且无任何噪声模型**；**`ge_sim_v2` 已核验：同样只有 RGB**，深度/LiDAR/IMU/力矩/触觉/音频/分割全部未提及，且**范式上就不存在显式噪声模型**（`background_knowledge.md` §2.7.4） |
 | **多本体横向对比**（同任务换机器人） | `lw_benchhub` | 28 个机器人变体 × 272 个任务的组合注册表；但**位姿需查 `layout_task_mapping.csv`**（§4.5） |
 | **离线 / 内网环境**部署 | ⚠️ 避开 `lw_benchhub` | 场景与物体资产运行时联网从 Lightwheel 云端拉取，无独立下载脚本（§4.10） |
 

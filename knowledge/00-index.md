@@ -90,7 +90,7 @@ simulation-knowledge/
 |---|---|---|---|---|---|---|
 | **genie_sim_v3** | 智元 Genie Sim 3.x，OpenUSD + Isaac Sim 的评测/采集/RL 三栈仿真平台 | ⭐ [速查卡](projects/genie_sim_v3/quickstart.md) | ✅ [已完成](projects/genie_sim_v3/background_knowledge.md) | ✅ [已完成](projects/genie_sim_v3/ai_knowledge.md) | ✅ [Q01–Q29](projects/genie_sim_v3/troubleshooting.md) | ✅ [已完成](projects/genie_sim_v3/code_knowledge.md) |
 | **genesis_world** | Genesis World 通用物理平台，8 类求解器 + 3 种可换耦合器，单卡大规模并行、可微仿真、传感器缺陷建模 | ⭐ [速查卡](projects/genesis_world/quickstart.md) | ✅ [已完成](projects/genesis_world/background_knowledge.md)（v1.3.3） | ✅ [已完成](projects/genesis_world/ai_knowledge.md)（v1.2.2） | ✅ [Q01–Q37](projects/genesis_world/troubleshooting.md) | ✅ [已完成](projects/genesis_world/code_knowledge.md)（v1.2.2） |
-| **ge_sim_v2** | 智元 GE-Sim-V2，视频扩散**生成式世界模型**（非传统物理仿真） | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 |
+| **ge_sim_v2** | 智元 GE-Sim-V2，**动作条件视频生成式世界模型**（⚠️ 非物理仿真：无引擎、无渲染器、无场景文件，只出 RGB） | ⏳ 待编写 | 🟡 [已完成](projects/ge_sim_v2/background_knowledge.md)（论文 v1 / 权重 v2.0.1） | ⏳ 待编写 | ⏳ 待编写 | ⏳ 待编写 |
 | **lw_benchhub** | 光轮 LW-BenchHub，架在 Isaac Lab + IsaacLab-Arena 之上的**薄组合层**操作 benchmark | ⭐ [速查卡](projects/lw_benchhub/quickstart.md) | ✅ [已完成](projects/lw_benchhub/background_knowledge.md) | ✅ [已完成](projects/lw_benchhub/ai_knowledge.md) | ✅ [Q01–Q38](projects/lw_benchhub/troubleshooting.md) | ✅ [已完成](projects/lw_benchhub/code_knowledge.md) |
 
 ---
@@ -122,6 +122,8 @@ simulation-knowledge/
 | 做 sim2real 或 Real2Sim(3DGS) | 第 2 章渲染 + 第 6 章对应流程 + 第 8 章缺口清单；**实战全流程与踩坑见 `ai_knowledge.md` §2.2 + §4.5** |
 | **评估复现工作量 / 避免重复踩坑** | `ai_knowledge.md` §2（时间线与计划变更点）+ §3（决策表）+ §6（8 条可复用教训） |
 | 跨工具链选型 | [`projects/00-index.md`](projects/00-index.md) 的「选型对照表」 |
+| **想用世界模型（GE-Sim 2.0）替代物理仿真做闭环评测** | ⚠️ 先读 `ge_sim_v2/background_knowledge.md` **§1.4 适用/不适用表**与 **§8.3 能力边界表** —— 它只回答"策略看起来会怎么动"，**不回答"物理上会不会成功"**；再看 **§8.4 交付落差** —— **开箱即用 `reward`/`progress` 恒为 `None`**（World Judge 未开源），"自带奖励"这一核心卖点要自己补 |
+| **要引用 GE-Sim 2.0 的性能 / 榜单数字** | ⭐ **必读 `ge_sim_v2/background_knowledge.md` §8.2 五条证据矛盾** —— "100 帧/2.3 秒"实为 25 帧 × 4× 跳帧的**覆盖跨度**；"可做 RL"只见于公众号（论文列为未来工作）；"登顶 WorldArena"指活榜，且**基准论文正文 grep `GE-Sim` 命中 0**、其作者自述该分数与动作规划仅 **r=0.36** 弱相关 |
 
 ---
 
@@ -132,5 +134,7 @@ simulation-knowledge/
   - **lw_benchhub** —— 原理层 1478 行（9 章齐备，含 §2.6 传感器仿真 13 小节、§4.2 规模数字实测校准、§8.3 十六项已验证代码缺陷、§8.7 未找到清单）＋ 经验层 432 行（`P01`–`P38` / `D01`–`D18` / `L01`–`L08`）＋ 排障层 864 行（`Q01`–`Q38`，5 组，带快速症状索引与贡献指南）＋ **代码层 952 行**（对应复现仓库 `lw_benchhub_tour`；`[CODE]`×72 / `[实践]`×15 / `[推断]`×8；含 **11 处 monkey patch 全表**（上游 10 + 本地新增 1）、**两份 vendored IsaacLab 的判别法**、**11 条静默失效路径**、22 行 `Qxx`→机制映射）＋ **速查层 403 行**（3 个带预期输出的运行示例）
   - **genesis_world** —— **原理层 1205 行**（9 章齐备，核对上游 v1.3.3 / HEAD `19f56d6`；含 §2.5 传感器仿真 7 小节、§3.1「四层栈 vs 仓库实际内容」的 Nyx 零命中证据、§5.3 六处依赖 pin 逐条溯因、§8.1 十五条 `[CODE]` 级限制、§8.4 九项未提及清单）＋ **经验层 362 行**（`P01`–`P37` / `D01`–`D20` / `L01`–`L08`；四条技术路线：VLA 闭环 ❌ 0/8、G1+PI0 ⚠️ 仅计划、Go2 PPO ✅、多物理耦合 ✅）＋ **排障层 902 行**（`Q01`–`Q37`，A–H 八类，带 37 行快速症状索引与贡献指南）＋ **代码层 570 行**（对应复现仓库 `genesis-world-tour`，8 章；含 14 个入口的 `文件:行号` 总表、16 行静默失效清单、12 文件/49 行硬编码路径脱敏清单、§8 四张跨层映射表）＋ **速查层 260 行**（3 组带预期输出的运行示例 + 自检清单）。五层交叉引用已闭环。
     ⚠️ **版本落差**：原理层核对 **1.3.3**，其余四层实测于 **1.2.2** —— 后四层的 API 写法不可直接套用到新版本，但能力边界结论（IPC 需额外装 `pyuipc`、无 IPC 时 FEM 不做刚-柔接触、相机无噪声字段、`build()` 不可逆）两边一致
-- **源料就绪、待编写**：1 个项目（ge_sim_v2），`sources/ge_sim_v2/` 下已有 URL 清单与原始资料，且本机有对应的实战仓库可交叉验证
-- **下一步建议**：按同一五层模板处理 **ge_sim_v2**（源料与本机实战仓库均已就绪）。每篇完成后同步更新本文件、`projects/00-index.md` 与该项目 `00-index.md` 三处
+- **进行中（仅原理层）**：**1 个项目**
+  - **ge_sim_v2** —— **原理层 1211 行**（9 章齐备，核对论文 arXiv:2605.27491v1 + 上游仓库快照 + HF 权重 `community v2.0.1`；含 **§2.7 传感器仿真专项 6 小节**（结论：**只有 RGB**，深度/LiDAR/IMU/力矩/触觉/音频/分割全部未提及，且范式上不存在显式噪声模型）、**§8.2 五条证据矛盾**（宣传口径与论文/代码的逐条比对）、§8.3 能力边界表、§8.4 论文与开源交付落差、§8.5 十五条工程注意事项）。⚠️ **论文 v1 与发布权重 v2.0.1 不是同一交付物**。
+    其余四层 ⏳ 待编写：源料 `sources/ge_sim_v2/GE-Sim-V2-tour-docs.md`（11917 行）与实战仓库 `GE-Sim-V2-tour/` 均已就绪
+- **下一步建议**：继续为 **ge_sim_v2** 补齐经验层 → 排障层 → 代码层 → 速查层。每篇完成后同步更新本文件、`projects/00-index.md` 与该项目 `00-index.md` 三处
