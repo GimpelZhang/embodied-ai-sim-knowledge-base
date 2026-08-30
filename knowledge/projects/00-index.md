@@ -12,7 +12,7 @@
 |---|---|---|---|---|---|---|---|---|---|
 | `genie_sim_v3` | Genie Sim 3.x (`AgibotTech/genie_sim`) | 智元机器人 AgiBot | ✅ 已完成 | [`quickstart.md`](genie_sim_v3/quickstart.md) | [`background_knowledge.md`](genie_sim_v3/background_knowledge.md) | [`ai_knowledge.md`](genie_sim_v3/ai_knowledge.md) | [`troubleshooting.md`](genie_sim_v3/troubleshooting.md) | [`code_knowledge.md`](genie_sim_v3/code_knowledge.md) | [`00-index.md`](genie_sim_v3/00-index.md) |
 | `genesis_world` | Genesis World (`Genesis-Embodied-AI/genesis-world`) | Genesis Embodied AI | ✅ 已完成（五层齐备） | [`quickstart.md`](genesis_world/quickstart.md) | [`background_knowledge.md`](genesis_world/background_knowledge.md) | [`ai_knowledge.md`](genesis_world/ai_knowledge.md) | [`troubleshooting.md`](genesis_world/troubleshooting.md) | [`code_knowledge.md`](genesis_world/code_knowledge.md) | [`00-index.md`](genesis_world/00-index.md) |
-| `ge_sim_v2` | GE-Sim-V2 (`AgibotTech/GE-Sim-V2`) | 智元机器人 AgiBot | 🟡 原理层已完成 | — | [`background_knowledge.md`](ge_sim_v2/background_knowledge.md) | — | — | — | [`00-index.md`](ge_sim_v2/00-index.md) |
+| `ge_sim_v2` | GE-Sim-V2 (`AgibotTech/GE-Sim-V2`) | 智元机器人 AgiBot | 🟡 三层已完成（原理/经验/排障） | — | [`background_knowledge.md`](ge_sim_v2/background_knowledge.md) | [`ai_knowledge.md`](ge_sim_v2/ai_knowledge.md) | [`troubleshooting.md`](ge_sim_v2/troubleshooting.md) | — | [`00-index.md`](ge_sim_v2/00-index.md) |
 | `lw_benchhub` | LW-BenchHub (`LightwheelAI/LW-BenchHub`) | 光轮智能 Lightwheel | ✅ 已完成（五层齐备） | [`quickstart.md`](lw_benchhub/quickstart.md) | [`background_knowledge.md`](lw_benchhub/background_knowledge.md) | [`ai_knowledge.md`](lw_benchhub/ai_knowledge.md) | [`troubleshooting.md`](lw_benchhub/troubleshooting.md) | [`code_knowledge.md`](lw_benchhub/code_knowledge.md) | [`00-index.md`](lw_benchhub/00-index.md) |
 
 **四类文档的分工**（按"手上有什么"选）：
@@ -96,8 +96,10 @@ Genesis AI 出品的通用具身智能仿真平台（前身是 2024-12 的学术
 
 - **开发方**：智元机器人（AgibotTech）+ 北航 / LV-NUS / 天大（15 作者）
 - **版本**：核对于论文 **arXiv:2605.27491v1**（2026-05-26）+ 上游仓库快照 + HF 权重 `agibot-world/Genie-Envisioner-Sim-v2.0`（`community v2.0.1`）。⚠️ **论文 v1 与发布权重不是同一交付物**，论文数字不必然在发布权重上复现
-- **background 文档**：[`ge_sim_v2/background_knowledge.md`](ge_sim_v2/background_knowledge.md)（**1211 行**，9 章齐备，含 **§2.7 传感器仿真专项 6 小节**与 **§8.2 五条证据矛盾**）
-- **ai_knowledge / troubleshooting / code_knowledge / quickstart**：⏳ 待编写（源料 `GE-Sim-V2-tour-docs.md` 11917 行已就绪）
+- **background 文档**：[`ge_sim_v2/background_knowledge.md`](ge_sim_v2/background_knowledge.md)（**1232 行**，9 章齐备，含 **§2.7 传感器仿真专项 6 小节**与 **§8.2 五条证据矛盾**）
+- **ai_knowledge 文档**：[`ge_sim_v2/ai_knowledge.md`](ge_sim_v2/ai_knowledge.md)（**417 行**，8 章齐备；`P01`–`P41` / `D01`–`D20` / `L01`–`L08`）
+- **troubleshooting 文档**：[`ge_sim_v2/troubleshooting.md`](ge_sim_v2/troubleshooting.md)（**899 行**，`Q01`–`Q41`，A–E 五类，带 41 行快速症状索引与贡献指南）
+- **code_knowledge / quickstart**：⏳ 待编写（源料 `sources/ge_sim_v2/extract_repo.md` 与复现仓库 `GE-Sim-V2-tour/` 已就绪）
 - **项目内索引**：[`ge_sim_v2/00-index.md`](ge_sim_v2/00-index.md) ← **先读这个拿行号**
 - **⚠️ 定位提醒**：**这不是传统物理仿真器**，而是**动作条件视频生成式世界模型**。**没有物理引擎、没有渲染器、没有场景文件**，不能增删物体、不能换本体、不能改相机（三视角 head/left_wrist/right_wrist 固定，384×512）。它用神经网络生成替代了物理解算 + 渲染，与本库其他三个项目属于不同范式，**选型时勿等价对待**。
 
@@ -110,11 +112,14 @@ Genesis AI 出品的通用具身智能仿真平台（前身是 2024-12 的学术
 **三个"别踩"提醒**（详见项目内索引与 `background_knowledge.md` §8）
 ① **别把它当仿真器问"物理上会不会成功"** —— 它只回答"看起来会怎么动"（§2.1 / §8.3）；② **别直接引用宣传数字** —— "100 帧/2.3 秒"实为 25 帧 × 4× 跳帧的**覆盖跨度**（矛盾 1）、"可做 RL"只见于公众号而论文列为**未来工作**（矛盾 2）、"登顶 WorldArena"指活榜且**基准论文正文 grep `GE-Sim` 命中 0**、该基准作者自述其分数与动作规划仅 **r=0.36** 弱相关（矛盾 5）；③ **别忽略两套 16 维布局** —— 世界模型侧是 `[L7臂, L夹爪, R7臂, R夹爪]`，策略侧是 `[L7臂, R7臂, L夹爪, R夹爪]`，用错**不报错只是行为错**（§7.2，最高频静默错误）。另：配置默认把四个加速内核开关全开，**但内核需源码编译，首次部署应全关**（§5.4）。
 
+**实践层摘要**（`ai_knowledge.md` + `troubleshooting.md`，全篇 `[实践]` 级，**不是官方结论**）
+本机一次完整复现走了**五个阶段**：环境部署 → Real2Edit2Real 数据生成（46 个衍生场景）→ 世界模型闭环评测 → 离线过滤式 BC + RWR 训练 → RoboColiseum 线上盲测接入。三条最贵的量化结论：① **推理吞吐 0.88 帧/s ≈ 0.055× 实时**（印证 §8.2 矛盾 1）—— 它做不了在线 RL 的数据引擎，只适合离线批量 rollout；② **Stage 3 的 0 % 成功率是假阴性** —— 兜底路径静默吞掉了动作，Stage 5 的 0 才是真实测量；由此产出本项目最贵的教训 `L01`「下结论前先审计管道」，审计四件套是**回退计数 / 动作非退化 / 帧数对账 / 输入侧量纲**；③ **RWR 把过滤式 BC 从 30 % 拉到 80 %**（在世界模型自采数据上），但**判分器是自行补的 MiMo 替身，不是官方 World Judge**，该分数不可外推。另：**排障层 41 条中有 6 条属"不报错的失败"**（`L05`），这是本范式最贵的失败形态。
+
 **本机相关资源**（均已 gitignore，仅本地有效）
 - 源料：`sources/ge_sim_v2/background.txt`（8 个 URL：论文 / 项目页 / 上游仓库 / WorldArena 论文与榜单 / Real2Edit2Real 仓库与论文 / RoboColiseum）、`GE-Sim_v2_中文介绍.txt`（公众号，`[文章]` 级，**口径与论文冲突**）
 - 论文纯文本：`sources/ge_sim_v2/_web/{2605.27491,2602.08971,2512.19402}.txt`（GE-Sim 2.0 / WorldArena / Real2Edit2Real）
 - 上游仓库克隆：`sources/ge_sim_v2/GE-Sim-V2/`（142 文件）← **`[CODE]` 级证据在这里核实**；周边 `sources/ge_sim_v2/Real2Edit2Real/`（121 文件）
-- 复现原始记录：`sources/ge_sim_v2/GE-Sim-V2-tour-docs.md`（11917 行；✅ 已扫描无真实凭据，⚠️ 含约 300 处主机绝对路径，摘写时必须脱敏）
+- 复现原始记录：`sources/ge_sim_v2/GE-Sim-V2-tour-docs.md`（11917 行）＋派生材料 `key_events_summary.md`（`E01`–`E35`）与四份 extract。🔒 **正文 L1–11756 已确认干净，但尾部 L11757–11917 是追加的原始 prompt 日志，含明文口令与 API Key** —— 该尾部内容**从未、也不得**被引用进 `knowledge/**`；另全文含约 300 处主机绝对路径，摘写时必须脱敏（早前一次"全文无凭据"的判断只扫了结构化章节 —— **部分扫描不等于扫描干净**）
 - 实战复现仓库：`GE-Sim-V2-tour/` ← 代码层的描述对象
 
 ---
