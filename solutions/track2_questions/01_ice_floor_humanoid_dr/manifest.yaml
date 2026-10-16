@@ -1,0 +1,41 @@
+schema: simpraxis.solution_manifest.v1
+solution_id: track2_questions/01_ice_floor_humanoid_dr
+title: "冰面足式 Locomotion DR（Genesis World 1.3.3 humanoid，Task8 Track2 Q1 batch）"
+
+entrypoint: genesis_humanoid_dr.py
+
+args:
+  - "run --params-json <params.json> [--telemetry out.json] [--video out.mp4] [--label ...] [--dur-s 8.0]"
+  - "batch --out-dir <workdir>（必填，编排器注入）--seeds 3 [--dur-s 8.0] [--calibration-json push_window_calibration.json]"
+
+sim_engine:
+  slug: genesis
+  min_version: "1.3.3"
+
+dependencies:
+  python: ">=3.10"
+  pip: []
+  notes: "引擎 pins 钉死（sim-praxis CLAUDE.md 硬规则 8）：genesis-world 1.3.3、torch 2.4.1+cu124、numpy 1.26.4；空 pip 列表=使用引擎仓 pins。选窗标定件 v2 是引擎数据资产（/mnt/caches/simpraxis/genesis_probe），由编排器 stage，不随本方案分发。"
+
+rung_thresholds:
+  ref: orchestrator/judge/gait_thresholds.py
+  constants: [FALL_Z_M, FALL_TILT_DEG, CONTACT_FORCE_N, TELEM_HZ, DUR_S, EXPECTED_FRAMES, POSTPUSH_WINDOW_S, SLIP_V_MAX_MPS, CONTACT_FORCE_MAX_N, CONTACT_FORCE_MAX_N_DR, CONTRAST_RATIO, MIN_SEEDS]
+
+frozen_inputs:
+  - track: track2
+    index: 1
+
+files:
+  - relpath: genesis_humanoid_dr.py
+    sha256: 29dc536c3f4f3c3fca479101520ed6e26abd1119382875a63577ec46c9d0c048
+  - relpath: README.md
+    sha256: fe12e5c476fee61703a6b20e921951d731d48ab4a724380ef74d575679d107b0
+
+# 正本 = V1 对标线程 t8-genesis-20261016a 的 v1 实际执行副本（Phase 1 Task8）。
+v1_run_relpath: phase1/task8_track2/q1_genesis/run_t8-genesis-20261016a_1/genesis_humanoid_dr.py
+
+provenance:
+  # 迁移时引擎仓仓内版（后续提交 cede4b6/c3ec0bf 的引擎契约修复后版本，
+  # 与 run 正本约 20 行差异）；正本以 v1_run_relpath 的 run 副本 sha 为准。
+  repo_version_sha256: 7f42d64f4f0df40fcf9ca75fd91131a6de098edac42493c6ccff2b080345d297
+  note: "正本取 run 执行副本 sha256=29dc536c3f4f3c3fca479101520ed6e26abd1119382875a63577ec46c9d0c048（$SIMPRAXIS_RUN_DIR 下 v1_run_relpath）；仓内版 sha256=7f42d64f4f0df40fcf9ca75fd91131a6de098edac42493c6ccff2b080345d297，差异来自执行后的引擎契约修复（cede4b6/c3ec0bf）。"

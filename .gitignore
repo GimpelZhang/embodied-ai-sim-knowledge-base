@@ -9,3 +9,13 @@ lw_benchhub_tour/
 
 # 工具链运行时状态（会话、缓存、检查点），非知识内容
 .omc/
+
+# Task0b 三层分离：闭源数据产物（lancedb/blobs/bundles，实体在 /mnt），
+# data 为指向 /mnt/artifacts/embodied-kb/data 的软链，永不入库。
+# 尾斜杠 data/ 不匹配软链本身（彩排实证：软链后 git status 报 ?? data、
+# check-ignore data/lancedb 穿越软链 fatal）；锚定 /data 同时命中实体目录与软链。
+/data
+
+# Python 缓存（方案测试产物，非内容）
+__pycache__/
+*.pyc

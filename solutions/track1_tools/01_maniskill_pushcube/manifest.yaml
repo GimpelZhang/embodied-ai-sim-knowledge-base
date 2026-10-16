@@ -1,0 +1,37 @@
+schema: simpraxis.solution_manifest.v1
+solution_id: track1_tools/01_maniskill_pushcube
+title: "ManiSkill3 PushCube 真实 rollout（SAPIEN 3.0.3 / EGL 无头，Task7 Rung1-4 载体）"
+
+entrypoint: maniskill_pushcube.py
+
+args:
+  - "--out-dir <workdir>（必填，编排器注入）"
+  - "--run-id <run_id>（必填，编排器注入）"
+  - "--seed（默认内建 SEED）"
+  - "--hold-steps / --aim-offset / --reach-offset"
+  - "--preload-mm / --preload-ramp-frames / --push-speed-factor / --push-z"
+
+sim_engine:
+  slug: sapien
+  min_version: "3.0.3"
+
+dependencies:
+  python: ">=3.10"
+  pip: []
+  notes: "引擎 pins 钉死（sim-praxis CLAUDE.md 硬规则 8）：sapien 3.0.3、mani_skill 3.0.1、numpy 1.26.4、torch 2.4.1+cu124；空 pip 列表=使用引擎仓 pins，不覆盖。"
+
+rung_thresholds:
+  ref: orchestrator/judge/thresholds.py
+  constants: [CONTACT_DURATION_S, CONTACT_FORCE_CV_MAX, GOAL_WINDOW_S, MAX_PENETRATION_M]
+
+frozen_inputs:
+  - track: track1
+    index: 1
+
+files:
+  - relpath: maniskill_pushcube.py
+    sha256: f909b0798a50393c7d2b8f3167caa358656cc4ac3733669dfa1e119569b633b3
+  - relpath: README.md
+    sha256: c5b1200d77b5358589eabaed96cfd426700a833b8a16159ca1653b229ca7d207
+
+v1_run_relpath: null

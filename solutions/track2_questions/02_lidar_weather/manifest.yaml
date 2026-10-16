@@ -1,0 +1,46 @@
+schema: simpraxis.solution_manifest.v1
+solution_id: track2_questions/02_lidar_weather
+title: "固态 LiDAR 雨雪雾物理光学材质模型（Carla 0.10.0，Track2 Q2，D9 条件闸门）"
+
+entrypoint: collect_weather_lidar.py
+
+args:
+  - "collect_weather_lidar.py --out <out.npz 目录>（必填）[--host 127.0.0.1] [--port 2000] [--map Town10HD_Opt] [--repeat N] [--control-all-clear（阴性对照：三段全 clear）]"
+  - "analyze_q2.py --root <q2_carla 目录>（必填）--out <analysis 目录>（必填）[--reps 3] [--label negative_control] [--native-only]"
+  - "optics_model.py 为库模块（无 CLI）；QBACK_DEFAULT=0.4 由真人闸门读源码核对"
+
+sim_engine:
+  slug: carla
+  min_version: "0.10.0"
+
+dependencies:
+  python: ">=3.10"
+  pip: []
+  notes: "carla client 0.10.0 --no-deps（sim-praxis CLAUDE.md 硬规则 8 钉死）；光学/分析侧 numpy 1.26.4、matplotlib、imageio 随引擎 pins；空 pip 列表=使用引擎仓 pins。能力矩阵尚未注册 carla slug。"
+
+rung_thresholds:
+  ref: scripts/milestone1/q2_human_gate.py
+  constants: []
+
+frozen_inputs:
+  - track: track2
+    index: 2
+
+files:
+  - relpath: collect_weather_lidar.py
+    sha256: b118f9af1d0d109e69c2ea70279c37deac980f2d1003a0f6b3b910c445d59e9b
+  - relpath: optics_model.py
+    sha256: 87938a9e6c0b8214f506576ff13939d003c754779e6344815132a75ffd60ab6a
+  - relpath: analyze_q2.py
+    sha256: b91a0a3f01f107e0b15aeb04c71647d18e06fbcbb2343da649a6a094d5ac8165
+  - relpath: README.md
+    sha256: b58652f0773e652e232c18ab9ec5708aa25b5b1157f9fce9fcd66ac728f53655
+  - relpath: tests/conftest.py
+    sha256: 4f0fbc8518850db666bb81e17303edbf9b05f4f59b9309c6a98db9c6b3a0070a
+  - relpath: tests/test_optics_model.py
+    sha256: 512464c29ea15e0602af71e1aad84cd2b934b524f47b5db3712defbd93173be7
+  - relpath: tests/test_analyze_q2_contract.py
+    sha256: dd7f2c3263eb7689a6516c47c6b242984b80696750b0a979470cd4a99962bb1a
+
+# 仓内版即执行版（Q2 无独立 run 副本）；三件脚本逐字迁入。
+v1_run_relpath: null

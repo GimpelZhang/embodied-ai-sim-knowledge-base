@@ -1,0 +1,36 @@
+schema: simpraxis.solution_manifest.v1
+solution_id: track1_tools/02_mujoco_contact_push
+title: "MuJoCo 3.15.0 接触推动 Cube（EGL 无头，Task7 Rung1-4 载体）"
+
+entrypoint: mujoco_contact_push.py
+
+args:
+  - "--out-dir <workdir>（必填，编排器注入）"
+  - "--run-id <run_id>（必填，编排器注入）"
+  - "--width 640"
+  - "--height 480"
+
+sim_engine:
+  slug: mujoco
+  min_version: "3.15.0"
+
+dependencies:
+  python: ">=3.10"
+  pip: []
+  notes: "引擎 pins 钉死（sim-praxis CLAUDE.md 硬规则 8）：mujoco 3.15.0、numpy 1.26.4；空 pip 列表=使用引擎仓 pins，不覆盖。"
+
+rung_thresholds:
+  ref: orchestrator/judge/thresholds.py
+  constants: [CONTACT_DURATION_S, CONTACT_FORCE_CV_MAX, GOAL_WINDOW_S, MAX_PENETRATION_M]
+
+frozen_inputs:
+  - track: track1
+    index: 2
+
+files:
+  - relpath: mujoco_contact_push.py
+    sha256: b4386401775b876742edd568f459aa8e03856be35bd585defb45eb1b6ba573ec
+  - relpath: README.md
+    sha256: 2d82a2eecdd3c14900929250f9361c77f73ac21c5bf350d704ee0238e0dc84d2
+
+v1_run_relpath: null
