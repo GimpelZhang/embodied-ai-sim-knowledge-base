@@ -1,0 +1,39 @@
+schema: simpraxis.solution_manifest.v1
+solution_id: track1_tools/03_libero
+title: "LIBERO 官方 MuJoCo 栈最小闭环（libero_spatial 十任务 servo 抓放，Task7 Stage1）"
+
+entrypoint: stage1_minimal.py
+
+args:
+  - "--out-dir <workdir>（必填，编排器注入）"
+  - "--run-id <run_id>（编排器注入，默认 run）"
+
+sim_engine:
+  slug: mujoco
+  min_version: "3.1.6"
+
+dependencies:
+  python: ">=3.10"
+  pip: []
+  notes: "隔离 venv（/home/agent/runs/phase2/venvs/libero）内 pins：robosuite 1.4.0 + mujoco 3.1.6 + numpy 1.26.4 + torch 2.4.1+cu124 + gym 0.26.2 + easydict；mujoco 3.1.6 是用户裁决降版（robosuite 1.4.0 与 mujoco 3.15 存在 d.qM→d.M 与关节类型断言结构性断裂），Phase 1 主 venv 3.15 不动。空 pip 列表=使用隔离 venv pins，不覆盖。"
+
+rung_thresholds:
+  ref: orchestrator/judge/rungs.py
+  constants: []
+
+frozen_inputs:
+  - track: track1
+    index: 4
+
+files:
+  - relpath: stage1_minimal.py
+    sha256: a9619eca5ad1185415f6a98ba2196f09f0d9f3e17d0fc53d047a9bbf128fada7
+  - relpath: README.md
+    sha256: a5dc6892ca879c6526460096d8dcabd35970a122287693e310ffad1438f9fbb9
+
+# 正本 = Gate2 真人 accept 的 run 副本（Phase 2 Task7 stage1_spatial）。
+v1_run_relpath: null
+
+provenance:
+  repo_version_sha256: a9619eca5ad1185415f6a98ba2196f09f0d9f3e17d0fc53d047a9bbf128fada7
+  note: "仓内版即 Gate2 accept 执行版逐字节复制（run_t7-libero-stage1-20261026e_2/stage1_minimal.py，18741B）；v1_run_relpath=null 因仓内版即执行版。Task7 攒批85 后按计划 L166 回收。"
